@@ -10,14 +10,34 @@ class Judge0ExecutionRunner(BaseExecutionRunner):
     """
 
     LANGUAGE_MAP = {
-        'python': 71,    # Python (3.8.1)
-        'cpp': 54,       # C++ (GCC 9.2.0)
-        'c': 50,         # C (GCC 9.2.0)
-        'javascript': 63,# JavaScript (Node.js 12.14.0)
-        'java': 62,      # Java (OpenJDK 13.0.1)
-        'rust': 73,      # Rust (1.40.0)
-        'go': 60,        # Go (1.13.5)
-        'sql': 82,       # SQL (SQLite 3.27.2)
+        'python': 71,       # Python (3.8.1)
+        'python3': 71,
+        'react': 63,        # JavaScript (Node.js 12.14.0)
+        'react-jsx': 63,
+        'react-tsx': 74,    # TypeScript
+        'javascript': 63,   # JavaScript (Node.js 12.14.0)
+        'typescript': 74,   # TypeScript (3.7.4)
+        'cpp': 54,          # C++ (GCC 9.2.0)
+        'c': 50,            # C (GCC 9.2.0)
+        'java': 62,         # Java (OpenJDK 13.0.1)
+        'csharp': 51,       # C# (Mono 6.6.0.161)
+        'rust': 73,         # Rust (1.40.0)
+        'go': 60,           # Go (1.13.5)
+        'sql': 82,          # SQL (SQLite 3.27.2)
+        'php': 68,          # PHP (7.4.1)
+        'ruby': 72,         # Ruby (2.7.0)
+        'kotlin': 78,       # Kotlin (1.3.70)
+        'swift': 83,        # Swift (5.2.3)
+        'dart': 90,         # Dart (2.19.2)
+        'scala': 81,        # Scala (2.13.2)
+        'r': 80,            # R (4.0.0)
+        'julia': 94,        # Julia (1.4.0)
+        'bash': 46,         # Bash (5.0.0)
+        'lua': 64,          # Lua (5.3.5)
+        'perl': 85,         # Perl (5.28.1)
+        'haskell': 61,      # Haskell (GHC 8.8.3)
+        'elixir': 57,       # Elixir (1.9.4)
+        'html': 63,         # HTML / Web
     }
 
     def __init__(self):

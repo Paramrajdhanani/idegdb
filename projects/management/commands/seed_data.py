@@ -53,9 +53,67 @@ if __name__ == '__main__':
 """
             },
             {
+                'name': 'React (JSX)',
+                'slug': 'react',
+                'version': '18.x',
+                'monaco_id': 'javascript',
+                'file_extension': '.jsx',
+                'default_filename': 'App.jsx',
+                'run_command': 'node {entry_file}',
+                'supports_stdin': False,
+                'supports_debugging': True,
+                'formatter_name': 'prettier',
+                'icon_name': 'atom',
+                'display_order': 2,
+                'default_code': """import React, { useState, useEffect } from 'react';
+
+// CodeForge IDE - React 18 Component Playground
+export default function App() {
+    const [count, setCount] = useState(0);
+    const [tasks, setTasks] = useState([
+        { id: 1, text: 'Initialize CodeForge Cloud IDE', completed: true },
+        { id: 2, text: 'Build React 18 stateful components', completed: true },
+        { id: 3, text: 'Deploy to isolated execution sandbox', completed: false }
+    ]);
+
+    const completedCount = tasks.filter(t => t.completed).length;
+
+    console.log(`[React 18 Component Mounted] State: Count=${count}, CompletedTasks=${completedCount}/${tasks.length}`);
+
+    return (
+        <div className="react-dashboard-card">
+            <header className="card-header">
+                <h2>⚛️ CodeForge React 18 Engine</h2>
+                <span className="badge">Active Sandbox</span>
+            </header>
+
+            <main className="card-body">
+                <div className="counter-section">
+                    <p>Interactive Counter: <strong>{count}</strong></p>
+                    <button onClick={() => setCount(count + 1)}>+ Increment</button>
+                    <button onClick={() => setCount(0)}>Reset</button>
+                </div>
+
+                <div className="tasks-section">
+                    <h3>Project Roadmap ({completedCount}/{tasks.length})</h3>
+                    <ul>
+                        {tasks.map(task => (
+                            <li key={task.id} className={task.completed ? 'done' : 'pending'}>
+                                {task.completed ? '✓' : '○'} {task.text}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </main>
+        </div>
+    );
+}
+"""
+            },
+            {
                 'name': 'JavaScript (Node.js)',
                 'slug': 'javascript',
-                'version': '20.x',
+                'version': '22.x LTS',
                 'monaco_id': 'javascript',
                 'file_extension': '.js',
                 'default_filename': 'index.js',
@@ -64,7 +122,7 @@ if __name__ == '__main__':
                 'supports_debugging': True,
                 'formatter_name': 'prettier',
                 'icon_name': 'code',
-                'display_order': 2,
+                'display_order': 3,
                 'default_code': """// CodeForge IDE - JavaScript / Node.js
 const { performance } = require('perf_hooks');
 
@@ -97,6 +155,126 @@ console.log('Primes:', primes.join(', '));
 """
             },
             {
+                'name': 'Java',
+                'slug': 'java',
+                'version': '21 LTS',
+                'monaco_id': 'java',
+                'file_extension': '.java',
+                'default_filename': 'Main.java',
+                'compile_command': 'javac {files}',
+                'run_command': 'java Main',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'google-java-format',
+                'icon_name': 'coffee',
+                'display_order': 4,
+                'default_code': """// CodeForge IDE - Java 21 LTS
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("☕ Welcome to CodeForge Java 21 LTS Sandbox");
+        System.out.println("==================================================");
+        
+        List<String> technologies = Arrays.asList(
+            "Django", "Monaco Editor", "Python", "React", "Java 21", "WebSockets", "Docker"
+        );
+        
+        System.out.println("Active Platform Stack:");
+        technologies.stream()
+            .map(String::toUpperCase)
+            .sorted()
+            .forEach(tech -> System.out.println("  * " + tech));
+            
+        System.out.println("--------------------------------------------------");
+        System.out.println("Execution finished cleanly with 0 errors.");
+    }
+}
+"""
+            },
+            {
+                'name': 'TypeScript',
+                'slug': 'typescript',
+                'version': '5.x',
+                'monaco_id': 'typescript',
+                'file_extension': '.ts',
+                'default_filename': 'index.ts',
+                'run_command': 'ts-node {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'prettier',
+                'icon_name': 'code-2',
+                'display_order': 5,
+                'default_code': """// CodeForge IDE - TypeScript 5.x
+interface ProjectMetadata {
+    title: string;
+    version: string;
+    isProductionReady: boolean;
+    features: string[];
+}
+
+const ideInfo: ProjectMetadata = {
+    title: "CodeForge IDE",
+    version: "2.0.0",
+    isProductionReady: true,
+    features: ["Monaco Editor", "React Component Preview", "Multi-file Support", "Safe Sandbox Execution", "Live Sharing"]
+};
+
+console.log(`[TypeScript] ${ideInfo.title} v${ideInfo.version}`);
+ideInfo.features.forEach((feat, idx) => {
+    console.log(`  ${idx + 1}. ${feat}`);
+});
+"""
+            },
+            {
+                'name': 'React (TSX)',
+                'slug': 'react-tsx',
+                'version': '18.x / TS',
+                'monaco_id': 'typescript',
+                'file_extension': '.tsx',
+                'default_filename': 'App.tsx',
+                'run_command': 'node {entry_file}',
+                'supports_stdin': False,
+                'supports_debugging': False,
+                'formatter_name': 'prettier',
+                'icon_name': 'atom',
+                'display_order': 6,
+                'default_code': """import React, { useState } from 'react';
+
+interface MetricCardProps {
+    title: string;
+    value: string | number;
+    trend: string;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, trend }) => (
+    <div className="metric-box">
+        <h4>{title}</h4>
+        <span className="value">{value}</span>
+        <span className="trend">{trend}</span>
+    </div>
+);
+
+export default function Dashboard(): JSX.Element {
+    const [metrics] = useState<MetricCardProps[]>([
+        { title: 'API Response Time', value: '18ms', trend: '↓ 12% faster' },
+        { title: 'Sandbox Memory', value: '32MB', trend: 'Optimal' },
+        { title: 'Concurrent Users', value: '1,420', trend: '↑ 24%' }
+    ]);
+
+    return (
+        <div className="tsx-dashboard">
+            <h2>⚛️ React TypeScript Cloud Monitor</h2>
+            <div className="grid">
+                {metrics.map((m, i) => <MetricCard key={i} {...m} />)}
+            </div>
+        </div>
+    );
+}
+"""
+            },
+            {
                 'name': 'C++',
                 'slug': 'cpp',
                 'version': '20 / GCC',
@@ -109,7 +287,7 @@ console.log('Primes:', primes.join(', '));
                 'supports_debugging': True,
                 'formatter_name': 'clang-format',
                 'icon_name': 'cpu',
-                'display_order': 3,
+                'display_order': 7,
                 'default_code': """// CodeForge IDE - C++20 Environment
 #include <iostream>
 #include <vector>
@@ -152,7 +330,7 @@ int main() {
                 'supports_debugging': True,
                 'formatter_name': 'clang-format',
                 'icon_name': 'cpu',
-                'display_order': 4,
+                'display_order': 8,
                 'default_code': """/* CodeForge IDE - Standard C17 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -171,37 +349,67 @@ int main() {
 """
             },
             {
-                'name': 'Java',
-                'slug': 'java',
-                'version': '21 LTS',
-                'monaco_id': 'java',
-                'file_extension': '.java',
-                'default_filename': 'Main.java',
-                'compile_command': 'javac {files}',
-                'run_command': 'java Main',
+                'name': 'C#',
+                'slug': 'csharp',
+                'version': '.NET 8',
+                'monaco_id': 'csharp',
+                'file_extension': '.cs',
+                'default_filename': 'Program.cs',
+                'run_command': 'dotnet run',
                 'supports_stdin': True,
                 'supports_debugging': False,
-                'formatter_name': 'google-java-format',
-                'icon_name': 'coffee',
-                'display_order': 5,
-                'default_code': """// CodeForge IDE - Java 21 LTS
-import java.util.*;
+                'formatter_name': 'dotnet-format',
+                'icon_name': 'box',
+                'display_order': 9,
+                'default_code': """using System;
+using System.Linq;
+using System.Collections.Generic;
 
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("☕ Welcome to CodeForge Java Sandbox");
+class Program {
+    static void Main() {
+        Console.WriteLine("✨ CodeForge IDE - C# .NET 8 Environment");
+        Console.WriteLine("------------------------------------------");
         
-        List<String> technologies = Arrays.asList("Django", "Monaco", "Python", "WebSockets", "Docker");
+        var numbers = Enumerable.Range(1, 10).Select(x => x * x);
+        Console.WriteLine("Computed Squares: " + string.Join(", ", numbers));
         
-        System.out.println("Stack Components:");
-        technologies.stream()
-            .map(String::toUpperCase)
-            .sorted()
-            .forEach(tech -> System.out.println("  * " + tech));
-            
-        System.out.println("Execution finished cleanly.");
+        var languages = new List<string> { "C#", "F#", "Python", "Java", "TypeScript" };
+        Console.WriteLine($"Total languages listed: {languages.Count}");
     }
 }
+"""
+            },
+            {
+                'name': 'HTML5 / Web Preview',
+                'slug': 'html',
+                'version': 'HTML5 / CSS3',
+                'monaco_id': 'html',
+                'file_extension': '.html',
+                'default_filename': 'index.html',
+                'run_command': 'open',
+                'supports_stdin': False,
+                'supports_debugging': False,
+                'formatter_name': 'prettier',
+                'icon_name': 'globe',
+                'display_order': 10,
+                'default_code': """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CodeForge Web Playground</title>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0b0d10; color: #fff; padding: 2rem; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; }
+    h1 { color: #6c63ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🌐 CodeForge Web Canvas</h1>
+    <p>Live interactive HTML5, CSS3, and JavaScript prototyping.</p>
+  </div>
+</body>
+</html>
 """
             },
             {
@@ -216,7 +424,7 @@ public class Main {
                 'supports_debugging': False,
                 'formatter_name': 'sql-formatter',
                 'icon_name': 'database',
-                'display_order': 6,
+                'display_order': 11,
                 'default_code': """-- CodeForge IDE - Interactive SQL Query Engine
 CREATE TABLE developers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -228,12 +436,11 @@ CREATE TABLE developers (
 
 INSERT INTO developers (name, role, favorite_lang, years_exp) VALUES
 ('Alex Rivers', 'Backend Engineer', 'Python', 6),
-('Maya Patel', 'Full-Stack Developer', 'TypeScript', 4),
+('Maya Patel', 'Full-Stack Developer', 'React / TS', 4),
 ('Chen Wei', 'Systems Architect', 'C++', 8),
-('Elena Rossi', 'Data Engineer', 'SQL', 5),
-('Sam Taylor', 'DevOps Specialist', 'Go', 7);
+('Elena Rossi', 'Enterprise Engineer', 'Java', 7),
+('Sam Taylor', 'DevOps Specialist', 'Go', 5);
 
--- Query developers with high experience
 SELECT 
     name, 
     role, 
@@ -242,40 +449,6 @@ SELECT
 FROM developers
 WHERE years_exp >= 5
 ORDER BY years_exp DESC;
-"""
-            },
-            {
-                'name': 'TypeScript',
-                'slug': 'typescript',
-                'version': '5.x',
-                'monaco_id': 'typescript',
-                'file_extension': '.ts',
-                'default_filename': 'index.ts',
-                'run_command': 'ts-node {entry_file}',
-                'supports_stdin': True,
-                'supports_debugging': False,
-                'formatter_name': 'prettier',
-                'icon_name': 'code-2',
-                'display_order': 7,
-                'default_code': """// CodeForge IDE - TypeScript
-interface ProjectMetadata {
-    title: string;
-    version: string;
-    isProductionReady: boolean;
-    features: string[];
-}
-
-const ideInfo: ProjectMetadata = {
-    title: "CodeForge IDE",
-    version: "2.0.0",
-    isProductionReady: true,
-    features: ["Monaco Editor", "Multi-file Support", "Safe Sandbox Execution", "Live Sharing"]
-};
-
-console.log(`[TypeScript] ${ideInfo.title} v${ideInfo.version}`);
-ideInfo.features.forEach((feat, idx) => {
-    console.log(`  ${idx + 1}. ${feat}`);
-});
 """
             },
             {
@@ -291,7 +464,7 @@ ideInfo.features.forEach((feat, idx) => {
                 'supports_debugging': False,
                 'formatter_name': 'rustfmt',
                 'icon_name': 'shield',
-                'display_order': 8,
+                'display_order': 12,
                 'default_code': """// CodeForge IDE - Rust 1.75
 fn main() {
     println!("🦀 Hello from CodeForge Rust Environment!");
@@ -315,7 +488,7 @@ fn main() {
                 'supports_debugging': False,
                 'formatter_name': 'gofmt',
                 'icon_name': 'zap',
-                'display_order': 9,
+                'display_order': 13,
                 'default_code': """package main
 
 import (
@@ -335,31 +508,6 @@ func main() {
 """
             },
             {
-                'name': 'C#',
-                'slug': 'csharp',
-                'version': '.NET 8',
-                'monaco_id': 'csharp',
-                'file_extension': '.cs',
-                'default_filename': 'Program.cs',
-                'run_command': 'dotnet run',
-                'supports_stdin': True,
-                'supports_debugging': False,
-                'formatter_name': 'dotnet-format',
-                'icon_name': 'box',
-                'display_order': 10,
-                'default_code': """using System;
-using System.Linq;
-
-class Program {
-    static void Main() {
-        Console.WriteLine("✨ CodeForge IDE - C# .NET 8");
-        var numbers = Enumerable.Range(1, 10).Select(x => x * x);
-        Console.WriteLine("Squares: " + string.Join(", ", numbers));
-    }
-}
-"""
-            },
-            {
                 'name': 'PHP',
                 'slug': 'php',
                 'version': '8.3',
@@ -371,7 +519,7 @@ class Program {
                 'supports_debugging': False,
                 'formatter_name': 'php-cs-fixer',
                 'icon_name': 'file-code',
-                'display_order': 11,
+                'display_order': 14,
                 'default_code': """<?php
 // CodeForge IDE - PHP 8.3
 echo "🐘 CodeForge PHP Engine\\n";
@@ -393,7 +541,7 @@ foreach ($fruits as $index => $fruit) {
                 'supports_debugging': False,
                 'formatter_name': 'rubocop',
                 'icon_name': 'gem',
-                'display_order': 12,
+                'display_order': 15,
                 'default_code': """# CodeForge IDE - Ruby 3.3
 puts "💎 Welcome to CodeForge Ruby!"
 words = %w[elegant readable productive expressive]
@@ -412,7 +560,7 @@ puts "Ruby characteristics: " + words.map(&:capitalize).join(", ")
                 'supports_debugging': False,
                 'formatter_name': 'ktlint',
                 'icon_name': 'layers',
-                'display_order': 13,
+                'display_order': 16,
                 'default_code': """// CodeForge IDE - Kotlin
 fun main() {
     println("🔮 CodeForge Kotlin Environment")
@@ -433,7 +581,7 @@ fun main() {
                 'supports_debugging': False,
                 'formatter_name': 'swift-format',
                 'icon_name': 'compass',
-                'display_order': 14,
+                'display_order': 17,
                 'default_code': """// CodeForge IDE - Swift
 import Foundation
 
@@ -442,6 +590,245 @@ let greetings = ["Hello", "Bonjour", "Hola", "Ciao"]
 for greeting in greetings {
     print("\\(greeting), Developer!")
 }
+"""
+            },
+            {
+                'name': 'Dart',
+                'slug': 'dart',
+                'version': '3.x',
+                'monaco_id': 'dart',
+                'file_extension': '.dart',
+                'default_filename': 'main.dart',
+                'run_command': 'dart run {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'dart format',
+                'icon_name': 'target',
+                'display_order': 18,
+                'default_code': r"""// CodeForge IDE - Dart 3
+void main() {
+  print('🎯 CodeForge Dart Runtime');
+  final list = ['Flutter', 'Async/Await', 'Sound Null Safety'];
+  for (var i = 0; i < list.length; i++) {
+    print('${i + 1}. ${list[i]}');
+  }
+}
+"""
+            },
+            {
+                'name': 'Scala',
+                'slug': 'scala',
+                'version': '3.3',
+                'monaco_id': 'scala',
+                'file_extension': '.scala',
+                'default_filename': 'Main.scala',
+                'run_command': 'scala {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'scalafmt',
+                'icon_name': 'sparkles',
+                'display_order': 19,
+                'default_code': """// CodeForge IDE - Scala 3
+@main def run(): Unit =
+  println("✨ CodeForge Scala 3 Environment")
+  val numbers = List(1, 2, 3, 4, 5)
+  val doubled = numbers.map(_ * 2)
+  println(s"Doubled list: $doubled")
+"""
+            },
+            {
+                'name': 'R',
+                'slug': 'r',
+                'version': '4.3',
+                'monaco_id': 'r',
+                'file_extension': '.r',
+                'default_filename': 'main.r',
+                'run_command': 'Rscript {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'styler',
+                'icon_name': 'bar-chart-2',
+                'display_order': 20,
+                'default_code': """# CodeForge IDE - R Statistical Computing
+cat("📊 CodeForge R Statistical Engine\\n")
+data <- c(23, 45, 67, 89, 12, 34, 56, 78)
+cat("Mean:", mean(data), "\\n")
+cat("Standard Deviation:", sd(data), "\\n")
+"""
+            },
+            {
+                'name': 'Julia',
+                'slug': 'julia',
+                'version': '1.10',
+                'monaco_id': 'julia',
+                'file_extension': '.jl',
+                'default_filename': 'main.jl',
+                'run_command': 'julia {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'JuliaFormatter',
+                'icon_name': 'activity',
+                'display_order': 21,
+                'default_code': """# CodeForge IDE - Julia
+println("⚡ CodeForge Julia High-Performance Engine")
+A = [1 2; 3 4]
+println("Matrix Determinant: ", (A[1,1]*A[2,2] - A[1,2]*A[2,1]))
+"""
+            },
+            {
+                'name': 'Bash / Shell',
+                'slug': 'bash',
+                'version': '5.2',
+                'monaco_id': 'shell',
+                'file_extension': '.sh',
+                'default_filename': 'script.sh',
+                'run_command': 'bash {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'shfmt',
+                'icon_name': 'terminal',
+                'display_order': 22,
+                'default_code': """#!/usr/bin/env bash
+# CodeForge IDE - Shell Scripting
+echo "🐚 CodeForge Sandbox Shell"
+echo "System Time: $(date)"
+for item in Docker Containers WebSockets Monaco; do
+    echo "  * Feature: $item"
+done
+"""
+            },
+            {
+                'name': 'Lua',
+                'slug': 'lua',
+                'version': '5.4',
+                'monaco_id': 'lua',
+                'file_extension': '.lua',
+                'default_filename': 'main.lua',
+                'run_command': 'lua {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'lua-format',
+                'icon_name': 'moon',
+                'display_order': 23,
+                'default_code': """-- CodeForge IDE - Lua 5.4
+print("🌙 Welcome to CodeForge Lua!")
+local tbl = { "Fast", "Lightweight", "Embeddable" }
+for i, v in ipairs(tbl) do
+    print(string.format("  [%d] %s", i, v))
+end
+"""
+            },
+            {
+                'name': 'Perl',
+                'slug': 'perl',
+                'version': '5.38',
+                'monaco_id': 'perl',
+                'file_extension': '.pl',
+                'default_filename': 'main.pl',
+                'run_command': 'perl {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'perltidy',
+                'icon_name': 'feather',
+                'display_order': 24,
+                'default_code': """#!/usr/bin/env perl
+use strict;
+use warnings;
+
+print "🐪 CodeForge Perl Environment\\n";
+my @words = ('Practical', 'Extraction', 'Report', 'Language');
+print "Words: " . join(" - ", @words) . "\\n";
+"""
+            },
+            {
+                'name': 'Haskell',
+                'slug': 'haskell',
+                'version': 'GHC 9.6',
+                'monaco_id': 'haskell',
+                'file_extension': '.hs',
+                'default_filename': 'Main.hs',
+                'run_command': 'runghc {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'ormolu',
+                'icon_name': 'code',
+                'display_order': 25,
+                'default_code': """-- CodeForge IDE - Haskell
+main :: IO ()
+main = do
+    putStrLn "λ Welcome to CodeForge Haskell!"
+    let numbers = [1..10]
+    let squares = map (^2) numbers
+    putStrLn ("Squares: " ++ show squares)
+"""
+            },
+            {
+                'name': 'Elixir',
+                'slug': 'elixir',
+                'version': '1.16',
+                'monaco_id': 'elixir',
+                'file_extension': '.exs',
+                'default_filename': 'main.exs',
+                'run_command': 'elixir {entry_file}',
+                'supports_stdin': True,
+                'supports_debugging': False,
+                'formatter_name': 'mix format',
+                'icon_name': 'droplet',
+                'display_order': 26,
+                'default_code': """# CodeForge IDE - Elixir
+IO.puts("💧 CodeForge Elixir Sandbox")
+[1, 2, 3, 4, 5]
+|> Enum.map(&(&1 * 3))
+|> Enum.each(&IO.puts("Value: #{&1}"))
+"""
+            },
+            {
+                'name': 'JSON Data',
+                'slug': 'json',
+                'version': 'RFC 8259',
+                'monaco_id': 'json',
+                'file_extension': '.json',
+                'default_filename': 'config.json',
+                'run_command': 'validate',
+                'supports_stdin': False,
+                'supports_debugging': False,
+                'formatter_name': 'prettier',
+                'icon_name': 'braces',
+                'display_order': 27,
+                'default_code': """{
+  "name": "codeforge-project",
+  "version": "2.0.0",
+  "status": "production",
+  "features": [
+    "Monaco Code Editor",
+    "Multi-Language Sandbox",
+    "React JSX Transpiler",
+    "Java 21 LTS Runtime"
+  ]
+}
+"""
+            },
+            {
+                'name': 'Markdown Documentation',
+                'slug': 'markdown',
+                'version': 'CommonMark',
+                'monaco_id': 'markdown',
+                'file_extension': '.md',
+                'default_filename': 'README.md',
+                'run_command': 'preview',
+                'supports_stdin': False,
+                'supports_debugging': False,
+                'formatter_name': 'prettier',
+                'icon_name': 'file-text',
+                'display_order': 28,
+                'default_code': """# 🚀 CodeForge Cloud IDE Documentation
+
+CodeForge is a next-generation browser cloud IDE and code execution sandbox supporting over 25+ programming languages.
+
+## Key Features
+- **Monaco Editor**: VS Code powerhouse editing with intellisense and tabs.
+- **Instant Execution**: Safe isolated runtimes with low latency.
+- **Full Multi-File Projects**: Folder trees, imports, and instant ZIP exports.
 """
             }
         ]
@@ -807,6 +1194,177 @@ ORDER BY SUM(o.total_usd) DESC;
             }
         )
 
+        # Project 4: React 18 Dashboard & Component Suite
+        react_lang = created_langs.get('react')
+        if react_lang:
+            p4, _ = Project.objects.get_or_create(
+                owner=demo_user,
+                name='React 18 Interactive Task & Metric Studio',
+                language=react_lang,
+                defaults={
+                    'description': 'Modular React 18 frontend architecture with custom hooks, component composition, state management, and real-time metric tracking.',
+                    'visibility': 'public',
+                    'is_favorite': True
+                }
+            )
+            ProjectFile.objects.get_or_create(
+                project=p4,
+                name='App.jsx',
+                defaults={
+                    'path': '',
+                    'is_entry_point': True,
+                    'content': """import React, { useState, useEffect } from 'react';
+import Header from './components/Header.jsx';
+import TaskList from './components/TaskList.jsx';
+
+export default function App() {
+    const [tasks, setTasks] = useState([
+        { id: 1, title: 'Explore Monaco Editor in CodeForge', done: true },
+        { id: 2, title: 'Build React components with live JSX preview', done: true },
+        { id: 3, title: 'Compile Java 21 & C++ algorithms', done: false }
+    ]);
+
+    const toggleTask = (id) => {
+        setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+    };
+
+    console.log(`[React App] Rendered with ${tasks.length} total tasks.`);
+
+    return (
+        <div className="app-container">
+            <Header title="CodeForge React 18 Studio" subtitle="High-Performance Cloud Component Workspace" />
+            <TaskList tasks={tasks} onToggle={toggleTask} />
+        </div>
+    );
+}
+"""
+                }
+            )
+            ProjectFile.objects.get_or_create(
+                project=p4,
+                name='Header.jsx',
+                defaults={
+                    'path': 'components',
+                    'is_entry_point': False,
+                    'content': """import React from 'react';
+
+export default function Header({ title, subtitle }) {
+    return (
+        <header className="studio-header">
+            <h1>⚛️ {title}</h1>
+            <p className="subtitle">{subtitle}</p>
+        </header>
+    );
+}
+"""
+                }
+            )
+            ProjectFile.objects.get_or_create(
+                project=p4,
+                name='TaskList.jsx',
+                defaults={
+                    'path': 'components',
+                    'is_entry_point': False,
+                    'content': """import React from 'react';
+
+export default function TaskList({ tasks, onToggle }) {
+    return (
+        <div className="task-list-panel">
+            <h3>Sprint Tasks</h3>
+            <ul>
+                {tasks.map(task => (
+                    <li key={task.id} onClick={() => onToggle(task.id)}>
+                        <span>{task.done ? '✅' : '⏳'}</span>
+                        <span className={task.done ? 'task-done' : ''}>{task.title}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+"""
+                }
+            )
+
+        # Project 5: Java 21 Banking & Ledger Engine
+        java_lang = created_langs.get('java')
+        if java_lang:
+            p5, _ = Project.objects.get_or_create(
+                owner=demo_user,
+                name='Java 21 Enterprise Ledger & Banking Engine',
+                language=java_lang,
+                defaults={
+                    'description': 'Object-oriented Java 21 transactional ledger engine with thread-safe accounts, audit trails, and stream processing.',
+                    'visibility': 'public',
+                    'is_favorite': True
+                }
+            )
+            ProjectFile.objects.get_or_create(
+                project=p5,
+                name='Main.java',
+                defaults={
+                    'path': '',
+                    'is_entry_point': True,
+                    'content': """import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("☕ CodeForge Java 21 LTS - Banking Engine");
+        System.out.println("==================================================");
+
+        BankAccount acc1 = new BankAccount("ACC-1001", "Alex Developer", 2500.00);
+        BankAccount acc2 = new BankAccount("ACC-1002", "Elena Rossi", 4200.50);
+
+        System.out.println(acc1);
+        System.out.println(acc2);
+
+        acc1.deposit(750.00);
+        acc1.transferTo(acc2, 400.00);
+
+        System.out.println("\\nUpdated Accounts:");
+        System.out.println(acc1);
+        System.out.println(acc2);
+
+        System.out.println("--------------------------------------------------");
+        System.out.println("✓ All Java banking transactions committed.");
+    }
+}
+
+class BankAccount {
+    private final String accountNumber;
+    private final String owner;
+    private double balance;
+
+    public BankAccount(String accountNumber, String owner, double initialBalance) {
+        this.accountNumber = accountNumber;
+        this.owner = owner;
+        this.balance = initialBalance;
+    }
+
+    public void deposit(double amount) {
+        this.balance += amount;
+        System.out.printf("  [DEPOSIT] +$%.2f into %s (Balance: $%.2f)%n", amount, accountNumber, balance);
+    }
+
+    public boolean transferTo(BankAccount target, double amount) {
+        if (this.balance >= amount) {
+            this.balance -= amount;
+            target.balance += amount;
+            System.out.printf("  [TRANSFER] $%.2f from %s to %s%n", amount, this.accountNumber, target.accountNumber);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[%s] Owner: %-15s | Balance: $%.2f", accountNumber, owner, balance);
+    }
+}
+"""
+                }
+            )
+
         # 4. Create Sample Executions for Live Analytics
         e1 = Execution.objects.create(
             user=demo_user,
@@ -858,6 +1416,42 @@ ORDER BY SUM(o.total_usd) DESC;
             memory_bytes=2097152,
             status_message="SQL query executed successfully."
         )
+
+        if react_lang and 'p4' in locals():
+            e4 = Execution.objects.create(
+                user=demo_user,
+                project=p4,
+                language=react_lang,
+                status='completed',
+                execution_time_ms=95,
+                started_at=timezone.now(),
+                finished_at=timezone.now()
+            )
+            ExecutionResult.objects.create(
+                execution=e4,
+                stdout="⚛️ CodeForge React 18 Engine\n[Component Entry]: <App />\n[SSR Virtual DOM / HTML Output]: <div class=\"app-container\">...</div>\n✓ React 18 component reconciled and mounted cleanly (0 runtime errors).",
+                exit_code=0,
+                memory_bytes=16777216,
+                status_message="React component rendered successfully."
+            )
+
+        if java_lang and 'p5' in locals():
+            e5 = Execution.objects.create(
+                user=demo_user,
+                project=p5,
+                language=java_lang,
+                status='completed',
+                execution_time_ms=310,
+                started_at=timezone.now(),
+                finished_at=timezone.now()
+            )
+            ExecutionResult.objects.create(
+                execution=e5,
+                stdout="☕ CodeForge Java 21 LTS - Banking Engine\n[ACC-1001] Owner: Alex Developer | Balance: $2850.00\n[ACC-1002] Owner: Elena Rossi    | Balance: $4600.50\n✓ All Java banking transactions committed.",
+                exit_code=0,
+                memory_bytes=25165824,
+                status_message="Java program compiled and executed cleanly."
+            )
 
         self.stdout.write(self.style.SUCCESS(f"Seeded demo multi-file projects and execution logs."))
         self.stdout.write(self.style.SUCCESS("[OK] Database seeding complete!"))

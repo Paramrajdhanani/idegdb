@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account | CodeForge IDE{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%, rgba(108, 99, 255, 0.12), transparent 70%);padding:20px;">
+  <div style="width:100%;max-width:440px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:32px;box-shadow:var(--shadow-lg);">
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <a href="/" class="brand-logo" style="justify-content:center;margin-bottom:8px;">
+        <img src="/static/images/codeforge-logo.svg" alt="CodeForge Logo" class="brand-logo-img" style="width:34px;height:34px;" />
+        <span class="brand-text" style="font-size:18px;">Code<span class="brand-forge">Forge</span> <span class="brand-badge-ide">IDE</span></span>
+      </a>
+      <p style="color:var(--text-muted);font-size:13px;">Join the next-generation developer cloud IDE</p>
+    </div>
+
+    <form id="register-form" onsubmit="handleRegister(event)">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Username</label>
+        <input type="text" id="reg-username" class="input-control" placeholder="octocat" required autocomplete="username" />
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Email Address</label>
+        <input type="email" id="reg-email" class="input-control" placeholder="developer@example.com" required autocomplete="email" />
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Password (min 6 chars)</label>
+        <input type="password" id="reg-password" class="input-control" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Confirm Password</label>
+        <input type="password" id="reg-confirm-password" class="input-control" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
+      </div>
+
+      <button type="submit" id="btn-reg-submit" class="btn btn-primary" style="width:100%;padding:10px;font-size:14px;margin-bottom:16px;">
+        Create Account
+      </button>
+
+      <div style="text-align:center;font-size:13px;color:var(--text-muted);">
+        Already have an account? <a href="/login/" style="color:var(--accent-primary);text-decoration:none;font-weight:500;">Sign In</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-reg-submit');
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirm_password = document.getElementById('reg-confirm-password').value;
+
+    if (password !== confirm_password) {
+      Toast.error('Passwords do not match');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:14px;height:14px;"></i> Creating account...';
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+      const data = await ApiClient.post('/api/auth/register/', {
+        username, email, password, confirm_password
+      });
+
+      if (data.token) {
+        localStorage.setItem('codeforge_token', data.token);
+      }
+      Toast.success('Account created! Welcome to CodeForge.');
+      setTimeout(() => window.location.href = '/projects/', 500);
+    } catch (err) {
+      Toast.error(err.message || 'Registration failed');
+      btn.disabled = false;
+      btn.innerHTML = 'Create Account';
+    }
+  }
+</script>
+{% endblock %}

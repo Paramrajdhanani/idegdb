@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+
+{% block title %}CodeForge IDE - Workspace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/ide.css">
+{% endblock %}
+
+{% block content %}
+<div class="ide-container">
+  <!-- Top Navigation Bar -->
+  <header class="ide-navbar">
+    <!-- Left: Brand & Project Name -->
+    <div class="nav-left">
+      <a href="/" class="brand-logo" title="Back to Home">
+        <img src="/static/images/codeforge-logo.svg" alt="CodeForge Logo" class="brand-logo-img" />
+        <span class="brand-text">Code<span class="brand-forge">Forge</span> <span class="brand-badge-ide">IDE</span></span>
+      </a>
+
+      <div class="nav-divider"></div>
+
+      <input type="text" id="project-name-input" class="project-name-input" value="Untitled Project" title="Click to rename project" spellcheck="false" />
+
+      <div id="save-status-indicator" class="save-status-indicator saved">
+        <span class="status-dot"></span>
+        <span id="save-status-label">Saved</span>
+      </div>
+    </div>
+
+    <!-- Center: Execution Controls & Language Selector -->
+    <div class="nav-center">
+      <!-- Language Dropdown -->
+      <div class="language-dropdown-wrapper">
+        <button class="language-select-btn" id="language-dropdown-btn">
+          <i data-lucide="code" style="width:14px;height:14px;color:var(--accent-primary);"></i>
+          <span id="current-language-name">Python (3.13)</span>
+          <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
+        </button>
+        <div class="language-menu" id="language-dropdown-menu">
+          {% for lang in languages %}
+            <div class="language-option" onclick="ide.setLanguage('{{ lang.slug }}')">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <i data-lucide="{{ lang.icon_name }}" style="width:14px;height:14px;"></i>
+                <span>{{ lang.name }}</span>
+              </div>
+              <span class="lang-version">{{ lang.version }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Run / Debug / Stop Action Buttons -->
+      <div class="execution-controls">
+        <button class="btn btn-run" id="btn-run-code" onclick="ide.runCode()" title="Run Program (Ctrl + Enter / F9)">
+          <i data-lucide="play" style="width:14px;height:14px;fill:currentColor;"></i>
+          <span>Run</span>
+        </button>
+
+        <button class="btn btn-secondary" id="btn-debug-code" onclick="ide.debugCode()" title="Start Debugger (F8)">
+          <i data-lucide="bug" style="width:14px;height:14px;color:#D29922;"></i>
+          <span>Debug</span>
+        </button>
+
+        <button class="btn btn-ghost btn-icon-only" id="btn-stop-code" onclick="ide.stopCode()" title="Stop Execution">
+          <i data-lucide="square" style="width:14px;height:14px;color:var(--error);"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: File & Project Utilities, Settings, User -->
+    <div class="nav-right">
+      <button class="btn btn-ghost" onclick="ide.saveProject()" title="Save Project (Ctrl + S)">
+        <i data-lucide="save" style="width:14px;height:14px;"></i>
+        <span>Save</span>
+      </button>
+
+      <button class="btn btn-ghost" onclick="ide.formatCode()" title="Format Document (Ctrl + B)">
+        <i data-lucide="wand-2" style="width:14px;height:14px;"></i>
+        <span>Format</span>
+      </button>
+
+      <button class="btn btn-outline" onclick="ide.openShareModal()" title="Share Project">
+        <i data-lucide="share-2" style="width:14px;height:14px;"></i>
+        <span>Share</span>
+      </button>
+
+      <button class="btn btn-ghost btn-icon-only" onclick="ide.downloadProject()" title="Download Project ZIP">
+        <i data-lucide="download" style="width:15px;height:15px;"></i>
+      </button>
+
+      <button class="btn btn-ghost btn-icon-only" id="btn-open-palette" onclick="ide.commandPalette.toggle()" title="Command Palette (Ctrl + P)">
+        <i data-lucide="command" style="width:15px;height:15px;"></i>
+      </button>
+
+      <button class="btn btn-ghost btn-icon-only" onclick="ide.openSettingsModal()" title="Settings (Ctrl + Shift + S)">
+        <i data-lucide="settings" style="width:15px;height:15px;"></i>
+      </button>
+
+      <div class="nav-divider"></div>
+
+      {% if user.is_authenticated %}
+        <a href="/projects/" class="btn btn-secondary btn-sm" title="My Projects">
+          <i data-lucide="user" style="width:13px;height:13px;"></i>
+          <span>{{ user.username }}</span>
+        </a>
+      {% else %}
+        <a href="/login/" class="btn btn-primary btn-sm">Log In</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Main IDE Workspace Body -->
+  <div class="ide-body">
+    <!-- Left Sidebar: File Explorer -->
+    <aside class="ide-sidebar" id="ide-sidebar">
+      <div class="sidebar-header">
+        <span>Explorer</span>
+        <div class="sidebar-actions">
+          <button class="btn btn-ghost btn-icon-only" onclick="ide.openNewFileModal()" title="New File (Ctrl + M)">
+            <i data-lucide="file-plus" style="width:13px;height:13px;"></i>
+          </button>
+          <button class="btn btn-ghost btn-icon-only" onclick="ide.downloadProject()" title="Download ZIP">
+            <i data-lucide="download" style="width:13px;height:13px;"></i>
+          </button>
+          <button class="btn btn-ghost btn-icon-only" id="btn-toggle-sidebar" title="Toggle Sidebar">
+            <i data-lucide="panel-left-close" style="width:13px;height:13px;"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-content" id="project-file-tree">
+        <!-- Files will be injected by FileExplorer -->
+      </div>
+    </aside>
+
+    <!-- Vertical Resizer Bar -->
+    <div class="panel-resizer-vertical" id="sidebar-resizer"></div>
+
+    <!-- Center Workspace: Editor Tabs + Monaco Editor + Bottom Dock -->
+    <main class="ide-workspace">
+      <!-- Editor Wrapper -->
+      <div class="editor-wrapper">
+        <!-- Open Files Tabs Bar -->
+        <div class="editor-tabs-bar" id="editor-tabs-container">
+          <!-- Active tabs rendered by FileExplorer -->
+        </div>
+
+        <!-- Breadcrumb Path Bar -->
+        <div class="editor-breadcrumbs" id="editor-breadcrumbs">
+          <span>main.py</span>
+        </div>
+
+        <!-- Monaco Editor Mount Target -->
+        <div id="monaco-editor-container"></div>
+      </div>
+
+      <!-- Horizontal Resizer Bar -->
+      <div class="panel-resizer-horizontal" id="dock-resizer"></div>
+
+      <!-- Bottom Dock: Terminal, Output, Stdin, Errors, Debugger -->
+      <section class="ide-bottom-dock" id="ide-bottom-dock">
+        <div class="dock-header">
+          <div class="dock-tabs">
+            <button class="dock-tab-btn" data-tab="terminal">
+              <i data-lucide="terminal" style="width:13px;height:13px;"></i> Terminal
+            </button>
+            <button class="dock-tab-btn active" data-tab="output">
+              <i data-lucide="file-output" style="width:13px;height:13px;"></i> Output
+            </button>
+            <button class="dock-tab-btn" data-tab="stdin">
+              <i data-lucide="text-cursor-input" style="width:13px;height:13px;"></i> Standard Input
+            </button>
+            <button class="dock-tab-btn" data-tab="errors">
+              <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Errors
+            </button>
+            <button class="dock-tab-btn" data-tab="debugger">
+              <i data-lucide="bug" style="width:13px;height:13px;"></i> Debug Console
+            </button>
+          </div>
+
+          <div class="dock-actions">
+            <button class="btn btn-ghost btn-icon-only" onclick="ide.terminal.copyOutput()" title="Copy Output">
+              <i data-lucide="copy" style="width:13px;height:13px;"></i>
+            </button>
+            <button class="btn btn-ghost btn-icon-only" onclick="ide.terminal.clearOutput()" title="Clear Output (Ctrl + K)">
+              <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="dock-body">
+          <!-- 1. Terminal Panel -->
+          <div class="dock-panel" id="dock-panel-terminal">
+            <div style="color:var(--text-dim);font-size:12px;margin-bottom:6px;">
+              CodeForge Virtual Terminal &bull; Type <code>run</code>, <code>clear</code>, <code>help</code>, or shell commands.
+            </div>
+            <div id="dock-terminal-log" class="terminal-output-view" style="height:100px;overflow-y:auto;margin-bottom:8px;">
+              <span style="color:var(--text-muted);">$ CodeForge sandbox shell initialized. Type 'help' for commands.</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:var(--accent-primary);font-family:var(--font-code);font-size:13px;font-weight:600;">$</span>
+              <input type="text" id="terminal-cli-input" class="input-control" placeholder="Type a command (e.g. run, help, clear)..." style="font-family:var(--font-code);font-size:12px;height:32px;" onkeydown="if(event.key==='Enter') { ide.terminal.handleCliCommand(this.value); this.value=''; }" />
+            </div>
+          </div>
+
+          <!-- 2. Output Panel -->
+          <div class="dock-panel active" id="dock-panel-output">
+            <div id="output-meta-bar" class="output-meta-bar"></div>
+            <div id="dock-output-content" class="terminal-output-view" style="min-height:140px;">
+              <span style="color:var(--text-dim);">Run your code to see output here.</span>
+            </div>
+            <!-- Interactive Console Input Prompt (OnlineGDB style) -->
+            <div id="interactive-console-bar" class="interactive-console-bar" style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 8px;background:rgba(0,0,0,0.4);border:1px solid var(--border-color);border-radius:6px;">
+              <span style="color:var(--accent-primary);font-family:var(--font-code);font-size:14px;font-weight:700;">&gt;</span>
+              <input type="text" id="interactive-console-input" class="input-control" placeholder="Type input here and press Enter (e.g. 1, 2, or student details)..." style="flex:1;font-family:var(--font-code);font-size:13px;height:32px;background:transparent;border:none;box-shadow:none;" onkeydown="if(event.key==='Enter') { ide.terminal.submitInteractiveInput(this.value); }" />
+              <button class="btn btn-primary btn-sm" onclick="ide.terminal.submitInteractiveInput(document.getElementById('interactive-console-input').value)" style="height:28px;padding:0 12px;font-size:12px;">
+                <i data-lucide="corner-down-left" style="width:12px;height:12px;"></i> Send
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="ide.terminal.resetInteractiveSession()" title="Reset inputs for new run" style="height:28px;padding:0 8px;font-size:12px;color:var(--text-muted);">
+                <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i> Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Standard Input Panel -->
+          <div class="dock-panel" id="dock-panel-stdin">
+            <div style="margin-bottom:8px;font-size:12px;color:var(--text-muted);">
+              Provide standard input (stdin) lines sent to your program during execution:
+            </div>
+            <textarea id="dock-stdin-input" class="textarea-control" style="height:120px;font-family:var(--font-code);font-size:13px;" placeholder="Type stdin input lines here..."></textarea>
+          </div>
+
+          <!-- 4. Errors Panel -->
+          <div class="dock-panel" id="dock-panel-errors">
+            <div id="dock-errors-content" class="terminal-output-view">
+              <span style="color:var(--text-dim);">No errors reported.</span>
+            </div>
+          </div>
+
+          <!-- 5. Debug Console & Inspector Panel -->
+          <div class="dock-panel" id="dock-panel-debugger">
+            <div class="debugger-layout">
+              <!-- Subpanel 1: Call Stack -->
+              <div class="debug-subpanel">
+                <div class="debug-subpanel-title">Call Stack</div>
+                <div class="debug-subpanel-content" id="debug-call-stack-list">
+                  <div style="color:var(--text-dim);">Process not running.</div>
+                </div>
+              </div>
+
+              <!-- Subpanel 2: Variables Inspector -->
+              <div class="debug-subpanel">
+                <div class="debug-subpanel-title">Variables</div>
+                <div class="debug-subpanel-content" id="debug-variables-list">
+                  <div style="color:var(--text-dim);">No active variables.</div>
+                </div>
+              </div>
+
+              <!-- Subpanel 3: Watch & Breakpoints -->
+              <div class="debug-subpanel">
+                <div class="debug-subpanel-title">Breakpoints & Watch</div>
+                <div class="debug-subpanel-content">
+                  <div style="font-weight:600;margin-bottom:6px;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;">
+                    <span>Breakpoints:</span>
+                    <div style="display:flex;gap:4px;">
+                      <input type="number" id="debug-bp-line-input" class="input-control" placeholder="Line #" style="width:70px;padding:2px 6px;font-size:11px;height:24px;" min="1" onkeydown="if(event.key==='Enter') ide.debugger.addBreakpointFromInput()" />
+                      <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;height:24px;" onclick="ide.debugger.addBreakpointFromInput()">+ Add</button>
+                    </div>
+                  </div>
+                  <div id="debug-breakpoints-list"></div>
+
+                  <div style="font-weight:600;margin-top:14px;margin-bottom:6px;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;">
+                    <span>Watch:</span>
+                    <div style="display:flex;gap:4px;">
+                      <input type="text" id="debug-watch-expr-input" class="input-control" placeholder="Expression" style="width:110px;padding:2px 6px;font-size:11px;height:24px;" onkeydown="if(event.key==='Enter') ide.debugger.addWatchFromInput()" />
+                      <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;height:24px;" onclick="ide.debugger.addWatchFromInput()">+ Add</button>
+                    </div>
+                  </div>
+                  <div id="debug-watch-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     Modals
+     ========================================================================== -->
+
+<!-- 1. Command Palette Modal (Ctrl + P) -->
+<div class="command-palette-modal" id="command-palette-modal">
+  <div class="palette-input-wrapper">
+    <i data-lucide="search" style="width:16px;height:16px;color:var(--text-dim);"></i>
+    <input type="text" id="palette-search-input" class="palette-input" placeholder="Type a command or file name..." autocomplete="off" />
+  </div>
+  <div class="palette-results" id="palette-results-container"></div>
+</div>
+
+<!-- 2. Share Project Modal -->
+<div class="modal-overlay" id="share-project-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;">
+        <i data-lucide="share-2" style="width:18px;height:18px;color:var(--accent-primary);"></i> Share Project
+      </div>
+      <button class="btn btn-ghost btn-icon-only" onclick="ModalsManager.close('share-project-modal')">
+        <i data-lucide="x" style="width:16px;height:16px;"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Shareable Link</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="share-url-input" class="input-control" readonly />
+          <button class="btn btn-primary" onclick="ide.copyShareLink()">Copy</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Embed Iframe Code</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="share-embed-code" class="input-control" readonly />
+          <button class="btn btn-secondary" onclick="ide.copyEmbedCode()">Copy Embed</button>
+        </div>
+      </div>
+
+      <div style="padding:12px;background:var(--bg-tertiary);border-radius:var(--radius-md);font-size:12px;color:var(--text-muted);">
+        <i data-lucide="shield" style="width:14px;height:14px;display:inline-block;vertical-align:middle;color:var(--success);"></i>
+        Anyone with this link can view and run this project in their own sandbox.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="ModalsManager.close('share-project-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;">
+        <i data-lucide="settings" style="width:18px;height:18px;color:var(--accent-primary);"></i> Editor Settings
+      </div>
+      <button class="btn btn-ghost btn-icon-only" onclick="ModalsManager.close('settings-modal')">
+        <i data-lucide="x" style="width:16px;height:16px;"></i>
+      </button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Editor Theme</label>
+        <select id="setting-theme-select" class="select-control">
+          <option value="codeforge-dark">CodeForge Dark (Recommended)</option>
+          <option value="midnight">Midnight High Contrast</option>
+          <option value="vs-dark">VS Dark Standard</option>
+          <option value="vs-light">Light Mode</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Font Size (px)</label>
+          <input type="number" id="setting-font-size-input" class="input-control" value="14" min="10" max="28" />
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Tab Size (spaces)</label>
+          <input type="number" id="setting-tab-size-input" class="input-control" value="4" min="2" max="8" />
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;padding-top:8px;border-top:1px solid var(--border-subtle);">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="setting-word-wrap-toggle" checked />
+          <span style="font-size:13px;">Enable Word Wrap</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="setting-minimap-toggle" checked />
+          <span style="font-size:13px;">Display Code Minimap</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="ModalsManager.close('settings-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="ide.applySettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. New File Modal -->
+<div class="modal-overlay" id="new-file-modal">
+  <div class="modal-content" style="max-width:400px;">
+    <div class="modal-header">
+      <div style="font-weight:600;font-size:15px;">Create New File</div>
+      <button class="btn btn-ghost btn-icon-only" onclick="ModalsManager.close('new-file-modal')">
+        <i data-lucide="x" style="width:16px;height:16px;"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">File Name (e.g. helper.py, utils.js)</label>
+      <input type="text" id="new-file-name-input" class="input-control" placeholder="filename.ext" onkeydown="if(event.key==='Enter') ide.createFileFromModal()" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="ModalsManager.close('new-file-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="ide.createFileFromModal()">Create</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/ide/file-explorer.js"></script>
+<script src="/static/js/ide/terminal.js"></script>
+<script src="/static/js/ide/debugger.js"></script>
+<script src="/static/js/ide/command-palette.js"></script>
+<script src="/static/js/ide/modals.js"></script>
+<script src="/static/js/ide/main-ide.js"></script>
+
+{{ languages_data|json_script:"languages-data" }}
+<script>
+  const languagesData = JSON.parse(document.getElementById('languages-data')?.textContent || '[]');
+
+  window.ide = new CodeForgeIDE();
+  document.addEventListener('DOMContentLoaded', () => {
+    window.ide.init({
+      projectId: "{{ project_id|default:'' }}",
+      languages: languagesData
+    });
+  });
+</script>
+{% endblock %}

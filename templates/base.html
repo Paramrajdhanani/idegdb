@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CodeForge IDE - Online Compiler & Cloud IDE{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}Professional online code compiler and cloud IDE with multi-file project workspace, Monaco Editor, multi-language execution sandbox, and live sharing.{% endblock %}">
+  <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- GSAP Animation Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Monaco Editor AMD Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js"></script>
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="/static/css/design-system.css">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% csrf_token %}
+
+  {% block content %}{% endblock %}
+
+  <!-- Global Toast Notifications Container -->
+  <div id="toast-container"></div>
+
+  <!-- Core Javascript Modules -->
+  <script src="/static/js/core/api.js"></script>
+  <script src="/static/js/core/notifications.js"></script>
+  <script src="/static/js/core/shortcuts.js"></script>
+  <script src="/static/js/editor/monaco-manager.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

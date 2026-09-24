@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}CodeForge IDE | Code. Run. Debug. Build.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/landing.css">
+{% endblock %}
+
+{% block content %}
+<!-- Top Navigation Bar -->
+<header class="landing-nav">
+  <a href="/" class="brand-logo">
+    <img src="/static/images/codeforge-logo.svg" alt="CodeForge Logo" class="brand-logo-img" />
+    <span class="brand-text">Code<span class="brand-forge">Forge</span> <span class="brand-badge-ide">IDE</span></span>
+  </a>
+
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/ide/" class="btn btn-outline btn-sm">
+      <i data-lucide="play" style="width:12px;height:12px;"></i> Try Playground
+    </a>
+    {% if user.is_authenticated %}
+      <a href="/projects/" class="btn btn-primary btn-sm">
+        <i data-lucide="layout-grid" style="width:12px;height:12px;"></i> My Dashboard
+      </a>
+    {% else %}
+      <a href="/login/" class="btn btn-ghost btn-sm">Log In</a>
+      <a href="/register/" class="btn btn-primary btn-sm">Get Started</a>
+    {% endif %}
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="landing-hero">
+  <div class="hero-pill">
+    <span class="pill-dot"></span>
+    <span>Production Cloud IDE &bull; Multi-Language Sandbox</span>
+  </div>
+
+  <h1 class="hero-title">
+    Code. Run. Debug. Build.
+  </h1>
+
+  <p class="hero-subtitle">
+    Your browser-based development environment for writing, testing and sharing code anywhere.
+  </p>
+
+  <div class="hero-buttons">
+    <a href="/ide/" class="btn btn-primary btn-lg" id="btn-hero-start">
+      <i data-lucide="zap" style="width:18px;height:18px;"></i> Start Coding
+    </a>
+    <a href="/projects/" class="btn btn-secondary btn-lg" id="btn-hero-explore">
+      <i data-lucide="folder-code" style="width:18px;height:18px;"></i> Explore Projects
+    </a>
+  </div>
+
+  <!-- Interactive Live Code-Editor Preview -->
+  <div class="hero-preview-container">
+    <div class="preview-window-bar">
+      <div class="window-dots">
+        <span class="window-dot dot-red"></span>
+        <span class="window-dot dot-yellow"></span>
+        <span class="window-dot dot-green"></span>
+      </div>
+
+      <!-- Playground Language Switcher -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="btn btn-sm btn-ghost playground-tab-btn active" data-lang="python">Python</button>
+        <button class="btn btn-sm btn-ghost playground-tab-btn" data-lang="javascript">JavaScript</button>
+        <button class="btn btn-sm btn-ghost playground-tab-btn" data-lang="sql">SQL</button>
+      </div>
+
+      <button class="btn btn-sm btn-run" id="hero-run-btn">
+        <i data-lucide="play" style="width:13px;height:13px;fill:currentColor;"></i> Run
+      </button>
+    </div>
+
+    <div class="preview-grid">
+      <div class="preview-code-pane" id="hero-code-pane"></div>
+      <div class="preview-output-pane" id="hero-output-pane">
+        <span style="color:var(--text-dim);">Click "▶ Run" to execute live code in sandbox...</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="landing-section" id="features">
+  <div class="section-header">
+    <h2 class="section-title">Engineered for Modern Developers</h2>
+    <p class="section-desc">Everything you need to prototype, test algorithms, debug logic, and share cloud projects.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="layers" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Multi-Language Coding</h3>
+      <p class="feature-text">Native compilers and runtime environments for Python, C++, C, JavaScript, TypeScript, Java, Rust, Go, SQL, and more.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="cpu" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Fast Execution</h3>
+      <p class="feature-text">Sub-second execution with process isolation, strict timeouts, memory capping, and output streaming.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="terminal" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Interactive Terminal</h3>
+      <p class="feature-text">Integrated terminal dock with stdout/stderr separation, multiline standard input support, and execution performance metrics.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="folder-tree" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Project Management</h3>
+      <p class="feature-text">Full multi-file hierarchy with folders, tabs, file upload, automatic ZIP exporter, and quick duplicate cloning.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="bug" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Debugger Controls</h3>
+      <p class="feature-text">Call stack inspection, variable viewers, watch expressions, and breakpoint management interface.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="share-2" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Code Sharing</h3>
+      <p class="feature-text">Generate secure tokenized share links with read-only view modes, cloneable workspaces, and embeddable iframe snippets.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="cloud" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Cloud Projects</h3>
+      <p class="feature-text">Autosave architecture with persistent project state, user preferences, and cross-device sync.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-box"><i data-lucide="command" style="width:22px;height:22px;"></i></div>
+      <h3 class="feature-title">Keyboard Shortcuts</h3>
+      <p class="feature-text">Ctrl+S to save, Ctrl+Enter to run, Ctrl+B to beautify, and Ctrl+P for global quick command palette.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Supported Languages Section -->
+<section class="landing-section" style="border-top: 1px solid var(--border-subtle);">
+  <div class="section-header">
+    <h2 class="section-title">Supported Programming Languages</h2>
+    <p class="section-desc">Pick your favorite language and start writing code immediately.</p>
+  </div>
+
+  <div class="languages-grid">
+    {% for lang in featured_languages %}
+      <div class="language-card">
+        <div class="language-icon-circle">
+          <i data-lucide="{{ lang.icon_name }}" style="width:20px;height:20px;"></i>
+        </div>
+        <div class="language-name">{{ lang.name }}</div>
+        <div class="language-ver">{{ lang.version }}</div>
+        <a href="/ide/?lang={{ lang.slug }}" class="btn btn-ghost btn-sm" style="margin-top:6px;">
+          Code <i data-lucide="arrow-right" style="width:11px;height:11px;"></i>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="landing-section" style="border-top: 1px solid var(--border-subtle);">
+  <div class="section-header">
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-desc">A frictionless workflow designed for pure development speed.</p>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-number">01</div>
+      <div class="step-title">Create Project</div>
+      <p class="step-desc">Start with a single file or initialize a multi-file project with modular directories.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">02</div>
+      <div class="step-title">Write Code</div>
+      <p class="step-desc">Enjoy full Monaco Editor power: syntax highlighting, autocompletion, and multi-cursor.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">03</div>
+      <div class="step-title">Run</div>
+      <p class="step-desc">Hit Ctrl+Enter to dispatch execution to the isolated sandbox runner.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">04</div>
+      <div class="step-title">Inspect Output</div>
+      <p class="step-desc">Analyze stdout, stderr, execution time, and exit codes in the terminal dock.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">05</div>
+      <div class="step-title">Debug</div>
+      <p class="step-desc">Set breakpoints and inspect variable states to isolate edge case bugs.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">06</div>
+      <div class="step-title">Save & Share</div>
+      <p class="step-desc">Save to your cloud dashboard or generate instant tokenized share links.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA Banner -->
+<section class="landing-section">
+  <div class="landing-cta-banner">
+    <h2 style="font-size:32px;font-weight:700;margin-bottom:12px;">Ready to write your next program?</h2>
+    <p style="color:var(--text-secondary);font-size:16px;max-width:540px;margin:0 auto 28px;">
+      Experience the fast, dark-first IDE crafted for serious programming.
+    </p>
+    <a href="/ide/" class="btn btn-primary btn-lg" style="font-size:16px;">
+      <i data-lucide="code-2" style="width:20px;height:20px;"></i> Open CodeForge IDE
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="landing-footer">
+  <p>&copy; 2026 CodeForge IDE. Built with Django, Python, DRF, Monaco Editor, and Isolated Sandbox Execution.</p>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/landing/landing.js"></script>
+{% endblock %}

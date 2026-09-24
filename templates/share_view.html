@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Shared Project: {{ project.name }} | CodeForge IDE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/ide.css">
+<style>
+  {% if is_embed %}
+  .ide-navbar { height: 40px; }
+  .brand-logo span { display: none; }
+  {% endif %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ide-container">
+  <!-- Shared Top Navigation Bar -->
+  <header class="ide-navbar">
+    <div class="nav-left">
+      <a href="/" class="brand-logo" target="_blank" title="Built with CodeForge IDE">
+        <img src="/static/images/codeforge-logo.svg" alt="CodeForge Logo" class="brand-logo-img" />
+        <span class="brand-text">Code<span class="brand-forge">Forge</span> <span class="brand-badge-ide">IDE</span></span>
+      </a>
+
+      <div class="nav-divider"></div>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-weight:600;font-size:14px;">{{ project.name }}</span>
+        <span class="badge badge-primary">{{ project.language.name }}</span>
+        <span class="badge badge-neutral">Shared Read-Only</span>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <button class="btn btn-run" id="btn-run-code" onclick="ide.runCode()">
+        <i data-lucide="play" style="width:14px;height:14px;fill:currentColor;"></i>
+        <span>Run Sandbox</span>
+      </button>
+    </div>
+
+    <div class="nav-right">
+      <a href="/ide/{{ project.id }}/" class="btn btn-primary btn-sm" target="_blank">
+        <i data-lucide="copy" style="width:13px;height:13px;"></i> Clone & Edit
+      </a>
+      <button class="btn btn-ghost btn-icon-only" onclick="window.location.href='/api/projects/{{ project.id }}/download/'" title="Download ZIP">
+        <i data-lucide="download" style="width:15px;height:15px;"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- IDE Body -->
+  <div class="ide-body">
+    <!-- Left Sidebar: File Explorer -->
+    <aside class="ide-sidebar" id="ide-sidebar" style="width:220px;">
+      <div class="sidebar-header">
+        <span>Files</span>
+      </div>
+      <div class="sidebar-content" id="project-file-tree"></div>
+    </aside>
+
+    <div class="panel-resizer-vertical" id="sidebar-resizer"></div>
+
+    <main class="ide-workspace">
+      <div class="editor-wrapper">
+        <div class="editor-tabs-bar" id="editor-tabs-container"></div>
+        <div class="editor-breadcrumbs" id="editor-breadcrumbs"><span>{{ project.name }}</span></div>
+        <div id="monaco-editor-container"></div>
+      </div>
+
+      <div class="panel-resizer-horizontal" id="dock-resizer"></div>
+
+      <section class="ide-bottom-dock" id="ide-bottom-dock" style="height:200px;">
+        <div class="dock-header">
+          <div class="dock-tabs">
+            <button class="dock-tab-btn active" data-tab="output">
+              <i data-lucide="file-output" style="width:13px;height:13px;"></i> Sandbox Output
+            </button>
+            <button class="dock-tab-btn" data-tab="stdin">
+              <i data-lucide="text-cursor-input" style="width:13px;height:13px;"></i> Standard Input
+            </button>
+          </div>
+          <div class="dock-actions">
+            <button class="btn btn-ghost btn-icon-only" onclick="ide.terminal.copyOutput()" title="Copy Output">
+              <i data-lucide="copy" style="width:13px;height:13px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="dock-body">
+          <div class="dock-panel active" id="dock-panel-output">
+            <div id="output-meta-bar" class="output-meta-bar"></div>
+            <div id="dock-output-content" class="terminal-output-view" style="min-height:140px;">
+              <span style="color:var(--text-dim);">Click "Run Sandbox" to execute this shared project.</span>
+            </div>
+            <!-- Interactive Console Input Prompt -->
+            <div id="interactive-console-bar" class="interactive-console-bar" style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 8px;background:rgba(0,0,0,0.4);border:1px solid var(--border-color);border-radius:6px;">
+              <span style="color:var(--accent-primary);font-family:var(--font-code);font-size:14px;font-weight:700;">&gt;</span>
+              <input type="text" id="interactive-console-input" class="input-control" placeholder="Type input here and press Enter..." style="flex:1;font-family:var(--font-code);font-size:13px;height:32px;background:transparent;border:none;box-shadow:none;" onkeydown="if(event.key==='Enter') { ide.terminal.submitInteractiveInput(this.value); }" />
+              <button class="btn btn-primary btn-sm" onclick="ide.terminal.submitInteractiveInput(document.getElementById('interactive-console-input').value)" style="height:28px;padding:0 12px;font-size:12px;">
+                <i data-lucide="corner-down-left" style="width:12px;height:12px;"></i> Send
+              </button>
+            </div>
+          </div>
+
+          <div class="dock-panel" id="dock-panel-stdin">
+            <textarea id="dock-stdin-input" class="textarea-control" style="height:100px;font-family:var(--font-code);" placeholder="Provide standard input lines here..."></textarea>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/ide/file-explorer.js"></script>
+<script src="/static/js/ide/terminal.js"></script>
+<script src="/static/js/ide/debugger.js"></script>
+<script src="/static/js/ide/command-palette.js"></script>
+<script src="/static/js/ide/modals.js"></script>
+<script src="/static/js/ide/main-ide.js"></script>
+
+{{ languages_data|json_script:"languages-data" }}
+<script>
+  const languagesData = JSON.parse(document.getElementById('languages-data')?.textContent || '[]');
+
+  window.ide = new CodeForgeIDE();
+  document.addEventListener('DOMContentLoaded', () => {
+    window.ide.init({
+      projectId: "{{ project.id }}",
+      languages: languagesData
+    });
+  });
+</script>
+{% endblock %}

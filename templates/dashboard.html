@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects Dashboard | CodeForge IDE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
+{% block content %}
+<!-- Top Header -->
+<header style="height:56px;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+  <a href="/" class="brand-logo">
+    <img src="/static/images/codeforge-logo.svg" alt="CodeForge Logo" class="brand-logo-img" />
+    <span class="brand-text">Code<span class="brand-forge">Forge</span> <span class="brand-badge-ide">IDE</span></span>
+  </a>
+
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/ide/" class="btn btn-outline btn-sm">
+      <i data-lucide="code" style="width:13px;height:13px;"></i> Open IDE
+    </a>
+    <button class="btn btn-primary btn-sm" onclick="dashboard.openNewProjectModal()">
+      <i data-lucide="plus" style="width:13px;height:13px;"></i> New Project
+    </button>
+    {% if user.is_authenticated %}
+      <div style="display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid var(--border-color);">
+        <span style="font-size:13px;font-weight:500;">{{ user.username }}</span>
+        <a href="/logout/" class="btn btn-ghost btn-sm" title="Log out">
+          <i data-lucide="log-out" style="width:14px;height:14px;"></i>
+        </a>
+      </div>
+    {% else %}
+      <a href="/login/" class="btn btn-primary btn-sm">Log In</a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="dashboard-container">
+  <!-- Welcome Banner -->
+  <div class="dashboard-header">
+    <div>
+      <h1 class="welcome-title">Welcome back, {{ user.first_name|default:user.username|default:"Developer" }}</h1>
+      <p class="welcome-subtitle">Manage your cloud repositories, monitor sandbox executions, and continue building.</p>
+    </div>
+    <div>
+      <button class="btn btn-primary btn-lg" onclick="dashboard.openNewProjectModal()">
+        <i data-lucide="plus" style="width:16px;height:16px;"></i> Create Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i data-lucide="folder-code"></i></div>
+      <div>
+        <div class="stat-value" id="stat-total-projects">0</div>
+        <div class="stat-label">Total Projects</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon"><i data-lucide="play-circle"></i></div>
+      <div>
+        <div class="stat-value" id="stat-total-executions">0</div>
+        <div class="stat-label">Executions Run</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon"><i data-lucide="check-circle" style="color:var(--success);"></i></div>
+      <div>
+        <div class="stat-value" id="stat-success-rate">100%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon"><i data-lucide="clock" style="color:var(--info);"></i></div>
+      <div>
+        <div class="stat-value" id="stat-avg-time">0ms</div>
+        <div class="stat-label">Avg Execution Time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7-Day Activity Chart Card -->
+  <div class="activity-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="font-size:15px;font-weight:600;">7-Day Execution Activity</h3>
+      <span style="font-size:12px;color:var(--text-dim);">Live Sandbox Metrics</span>
+    </div>
+    <div class="activity-bars" id="activity-bars-container">
+      <!-- Injected by DashboardController -->
+    </div>
+  </div>
+
+  <!-- Projects Section Header & Filters -->
+  <div class="projects-toolbar">
+    <div class="filter-pills">
+      <button class="filter-pill active" data-filter="all">All Projects</button>
+      <button class="filter-pill" data-filter="my">My Projects</button>
+      <button class="filter-pill" data-filter="favorite">Favorites</button>
+      <button class="filter-pill" data-filter="public">Public Repositories</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;">
+      <!-- Language Filter -->
+      <select id="dashboard-language-filter" class="select-control" style="width:160px;padding:6px 10px;font-size:12px;">
+        <option value="">All Languages</option>
+        {% for lang in languages %}
+          <option value="{{ lang.slug }}">{{ lang.name }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Search Input -->
+      <div style="position:relative;width:240px;">
+        <input type="text" id="dashboard-search-input" class="input-control" placeholder="Search projects..." style="padding-left:32px;font-size:12px;" />
+        <i data-lucide="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-dim);"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="projects-grid" id="projects-grid-container">
+    <!-- Rendered by DashboardController -->
+  </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal-overlay" id="create-project-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div style="font-weight:600;font-size:16px;">Create New Project</div>
+      <button class="btn btn-ghost btn-icon-only" onclick="ModalsManager.close('create-project-modal')">
+        <i data-lucide="x" style="width:16px;height:16px;"></i>
+      </button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Project Name</label>
+        <input type="text" id="create-project-name" class="input-control" placeholder="e.g. Data Analysis Pipeline" />
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Programming Language</label>
+        <select id="create-project-language" class="select-control">
+          {% for lang in languages %}
+            <option value="{{ lang.slug }}">{{ lang.name }} ({{ lang.version }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">Description (Optional)</label>
+        <textarea id="create-project-desc" class="textarea-control" style="height:80px;" placeholder="Brief description of your project..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="ModalsManager.close('create-project-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="dashboard.createProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/ide/modals.js"></script>
+<script src="/static/js/dashboard/dashboard.js"></script>
+<script>
+  window.dashboard = new DashboardController();
+  document.addEventListener('DOMContentLoaded', () => {
+    window.dashboard.init();
+  });
+</script>
+{% endblock %}

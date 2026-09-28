@@ -70,7 +70,11 @@ class CommandPalette {
     if (!query) {
       // Show default common actions
       this.currentItems = [
+        { title: 'CodeForge AI Copilot', action: 'ai_copilot', icon: 'sparkles', shortcut: 'Ctrl+Shift+A' },
         { title: 'Run Program', action: 'run', icon: 'play', shortcut: 'Ctrl+Enter' },
+        { title: 'Algorithm & Snippet Library', action: 'snippets', icon: 'code-2', shortcut: 'Ctrl+Shift+L' },
+        { title: 'Starter Project Templates', action: 'templates', icon: 'layout-template', shortcut: 'Ctrl+Shift+T' },
+        { title: 'Toggle Zen Focus Mode', action: 'zen_mode', icon: 'maximize-2', shortcut: 'F11' },
         { title: 'Debug Program', action: 'debug', icon: 'bug', shortcut: 'F8' },
         { title: 'Save Current File', action: 'save', icon: 'save', shortcut: 'Ctrl+S' },
         { title: 'New File', action: 'new_file', icon: 'file-plus', shortcut: 'Ctrl+M' },
@@ -179,7 +183,19 @@ class CommandPalette {
     this.hide();
 
     const action = item.action;
-    if (action === 'run' || action === 'run_code') window.ide.runCode();
+    if (action === 'ai_copilot' || action === 'ai_assistant') {
+      if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.toggleDrawer();
+    }
+    else if (action === 'snippets' || action === 'snippets_library') {
+      if (window.ide && window.ide.snippets) window.ide.snippets.openModal();
+    }
+    else if (action === 'templates' || action === 'project_templates') {
+      if (window.ide && window.ide.projectTemplates) window.ide.projectTemplates.openModal();
+    }
+    else if (action === 'zen_mode' || action === 'zen_focus') {
+      if (window.ide) window.ide.toggleZenMode();
+    }
+    else if (action === 'run' || action === 'run_code') window.ide.runCode();
     else if (action === 'debug' || action === 'debug_code') window.ide.debugCode();
     else if (action === 'stop' || action === 'stop_code') window.ide.stopCode();
     else if (action === 'save' || action === 'save_project') window.ide.saveProject();

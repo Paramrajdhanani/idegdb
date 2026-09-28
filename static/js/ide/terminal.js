@@ -248,12 +248,26 @@ class TerminalDock {
       const log = document.getElementById('dock-terminal-log');
       if (log) log.innerHTML = '<span style="color:var(--text-muted);">$ CodeForge terminal cleared.</span>';
     } else if (lower === 'help') {
-      this.appendTerminalLog('Available commands:\n  run         - Execute the active code\n  debug       - Launch debug console\n  ai          - Open AI Copilot assistant\n  preview     - Open Live Web / React Canvas\n  save        - Save project workspace\n  format      - Format document code\n  ls          - List project files\n  time        - Display current system time\n  clear / cls - Clear terminal output\n  help        - Show this help text');
-    } else if (lower === 'ai') {
-      if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.open();
+      this.appendTerminalLog('Available commands:\n  run         - Execute the active code\n  debug       - Launch debug console\n  ai [prompt] - Ask AI Copilot (e.g., ai explain, ai fix)\n  preview     - Open & render Live Web / React Canvas\n  save        - Save project workspace\n  format      - Format document code\n  export      - Download output log\n  ls          - List project files\n  time        - Display current system time\n  clear / cls - Clear terminal output\n  help        - Show this help text');
+    } else if (lower === 'ai' || lower.startsWith('ai ')) {
+      const promptArg = cmd.slice(2).trim();
+      if (window.ide && window.ide.aiAssistant) {
+        window.ide.aiAssistant.openDrawer();
+        if (promptArg) {
+          if (['explain', 'fix', 'optimize', 'tests', 'docs'].includes(promptArg.toLowerCase())) {
+            window.ide.aiAssistant.askQuickAction(promptArg.toLowerCase());
+          } else {
+            const promptInput = document.getElementById('ai-user-prompt');
+            if (promptInput) promptInput.value = promptArg;
+            window.ide.aiAssistant.submitPrompt();
+          }
+        }
+      }
     } else if (lower === 'preview') {
       this.switchTab('preview');
-      if (window.ide && window.ide.livePreview) window.ide.livePreview.updatePreview();
+      if (window.ide && window.ide.livePreview) window.ide.livePreview.renderFromEditor();
+    } else if (lower === 'export') {
+      this.exportOutputLog();
     } else if (lower === 'time') {
       this.appendTerminalLog(new Date().toString());
     } else if (lower === 'ls' || lower === 'dir') {

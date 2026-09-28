@@ -86,7 +86,48 @@ class MonacoManager {
           if (window.ide) window.ide.openNewFileModal();
         });
         this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA, () => {
-          if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.toggle();
+          if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.toggleDrawer();
+        });
+        this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI, () => {
+          if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.openDrawer();
+        });
+
+        // Add Right-Click AI Context Actions
+        this.editor.addAction({
+          id: 'codeforge-ai-explain',
+          label: '✨ AI: Explain Code',
+          contextMenuGroupId: '1_modification',
+          contextMenuOrder: 1.5,
+          run: () => {
+            if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.askQuickAction('explain');
+          }
+        });
+        this.editor.addAction({
+          id: 'codeforge-ai-fix',
+          label: '✨ AI: Find & Fix Bugs',
+          contextMenuGroupId: '1_modification',
+          contextMenuOrder: 1.6,
+          run: () => {
+            if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.askQuickAction('fix');
+          }
+        });
+        this.editor.addAction({
+          id: 'codeforge-ai-optimize',
+          label: '✨ AI: Optimize Speed',
+          contextMenuGroupId: '1_modification',
+          contextMenuOrder: 1.7,
+          run: () => {
+            if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.askQuickAction('optimize');
+          }
+        });
+        this.editor.addAction({
+          id: 'codeforge-ai-tests',
+          label: '✨ AI: Generate Unit Tests',
+          contextMenuGroupId: '1_modification',
+          contextMenuOrder: 1.8,
+          run: () => {
+            if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.askQuickAction('tests');
+          }
         });
 
         resolve(this.editor);

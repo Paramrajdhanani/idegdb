@@ -676,7 +676,7 @@ class CodeForgeIDE {
     const dock = document.getElementById('ide-bottom-dock');
     if (hResizer && dock) {
       let isResizing = false;
-      hResizer.addEventListener('mousedown', (e) => {
+      hResizer.addEventListener('mousedown', () => {
         isResizing = true;
         hResizer.classList.add('resizing');
         document.body.style.cursor = 'row-resize';
@@ -693,6 +693,33 @@ class CodeForgeIDE {
           isResizing = false;
           hResizer.classList.remove('resizing');
           document.body.style.cursor = '';
+        }
+      });
+    }
+
+    // Right AI Drawer Horizontal Resizer
+    const aiResizer = document.getElementById('ai-resizer');
+    const aiDrawer = document.getElementById('ai-assistant-drawer');
+    if (aiResizer && aiDrawer) {
+      let isResizing = false;
+      aiResizer.addEventListener('mousedown', () => {
+        isResizing = true;
+        aiResizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const newWidth = Math.max(280, Math.min(window.innerWidth - e.clientX, 650));
+        aiDrawer.style.width = `${newWidth}px`;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          aiResizer.classList.remove('resizing');
+          document.body.style.cursor = '';
+          if (this.monaco) this.monaco.layout();
         }
       });
     }
@@ -729,3 +756,8 @@ class CodeForgeIDE {
 }
 
 window.CodeForgeIDE = CodeForgeIDE;
+window.toggleAICopilot = function() {
+  if (window.ide && window.ide.aiAssistant) {
+    window.ide.aiAssistant.toggleDrawer();
+  }
+};

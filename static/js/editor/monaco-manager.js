@@ -48,6 +48,19 @@ class MonacoManager {
         this.editor.onDidChangeModelContent((e) => {
           const value = this.editor.getValue();
           this.onContentChangeCallbacks.forEach((cb) => cb(value, e));
+          if (window.ide && window.ide.statusBar) {
+            window.ide.statusBar.updateContentMetrics(value);
+          }
+          if (window.ide && window.ide.livePreview && window.ide.livePreview.autoReload) {
+            window.ide.livePreview.updatePreview();
+          }
+        });
+
+        // Listen for cursor position changes
+        this.editor.onDidChangeCursorPosition((e) => {
+          if (window.ide && window.ide.statusBar) {
+            window.ide.statusBar.updateCursor(e.position.lineNumber, e.position.column);
+          }
         });
 
         // Add Keybindings to Monaco instance
@@ -71,6 +84,9 @@ class MonacoManager {
         });
         this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM, () => {
           if (window.ide) window.ide.openNewFileModal();
+        });
+        this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA, () => {
+          if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.toggle();
         });
 
         resolve(this.editor);
@@ -216,6 +232,29 @@ class MonacoManager {
   updateSettings(settings) {
     if (!this.editor) return;
     this.editor.updateOptions(settings);
+  }
+
+  toggleWordWrap() {
+    if (!this.editor) return;
+    const current = this.editor.getOption(monaco.editor.EditorOption.wordWrap);
+    const newVal = current === 'on' ? 'off' : 'on';
+    this.editor.updateOptions({ wordWrap: newVal });
+    Toast.info(`Word Wrap: ${newVal.toUpperCase()}`);
+  }
+
+  toggleMinimap() {
+    if (!this.editor) return;
+    const current = this.editor.getOption(monaco.editor.EditorOption.minimap).enabled;
+    this.editor.updateOptions({ minimap: { enabled: !current } });
+    Toast.info(`Minimap: ${!current ? 'ENABLED' : 'DISABLED'}`);
+  }
+
+  adjustFontSize(delta) {
+    if (!this.editor) return;
+    const current = this.editor.getOption(monaco.editor.EditorOption.fontSize) || 14;
+    const nextSize = Math.max(10, Math.min(28, current + delta));
+    this.editor.updateOptions({ fontSize: nextSize });
+    Toast.info(`Font Size: ${nextSize}px`);
   }
 
   formatCode() {

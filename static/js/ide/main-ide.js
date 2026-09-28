@@ -18,6 +18,11 @@ class CodeForgeIDE {
     this.terminal = null;
     this.debugger = null;
     this.commandPalette = null;
+    this.aiAssistant = null;
+    this.livePreview = null;
+    this.snippets = null;
+    this.statusBar = null;
+    this.projectTemplates = null;
   }
 
   async init(config = {}) {
@@ -53,20 +58,37 @@ class CodeForgeIDE {
     // 5. Initialize Command Palette
     this.commandPalette = new CommandPalette();
 
-    // 6. Monaco Editor content listener
+    // 6. Initialize AI Assistant Copilot
+    this.aiAssistant = new AIAssistantController();
+    this.aiAssistant.init();
+
+    // 7. Initialize Live Preview Web / React Canvas
+    this.livePreview = new LivePreviewController();
+    this.livePreview.init();
+
+    // 8. Initialize Snippets Library
+    this.snippets = new SnippetsLibraryController();
+
+    // 9. Initialize Status Bar
+    this.statusBar = new StatusBarController();
+    this.statusBar.updateLanguage(this.currentLanguage);
+    this.statusBar.updateContentMetrics(this.currentLanguage ? this.currentLanguage.default_code : '');
+
+    // 10. Initialize Project Templates Wizard
+    this.projectTemplates = new ProjectTemplatesController();
+
+    // 11. Monaco Editor content listener
     this.monaco.onContentChange((newVal) => {
       this.fileExplorer.updateActiveFileContent(newVal);
       this.triggerAutosave();
     });
 
-    // 7. Initialize Keyboard Shortcuts
+    // 12. Initialize Keyboard Shortcuts & Listeners
     this._initShortcuts();
-
-    // 8. Initialize Panel Resizers & UI listeners
     this._initResizers();
     this._initUIListeners();
 
-    // 9. Load Project Data or Setup Blank Guest Project
+    // 13. Load Project Data or Setup Blank Guest Project
     if (this.projectId) {
       await this.loadProject(this.projectId);
     } else {
@@ -128,11 +150,24 @@ class CodeForgeIDE {
 
     this.monaco.setValue(file.content || '', monacoLang);
     this.monaco.focus();
+
+    if (this.statusBar) {
+      this.statusBar.updateContentMetrics(file.content || '');
+    }
+    if (this.livePreview && this.livePreview.autoReload) {
+      this.livePreview.updatePreview();
+    }
   }
 
   handleFileContentChanged(file) {
     this.isDirty = true;
     this.setSaveStatus('unsaved');
+    if (this.statusBar) {
+      this.statusBar.updateContentMetrics(file.content || '');
+    }
+    if (this.livePreview && this.livePreview.autoReload) {
+      this.livePreview.updatePreview();
+    }
   }
 
   triggerAutosave() {
@@ -168,6 +203,9 @@ class CodeForgeIDE {
     this.currentLanguage = lang;
     const nameEl = document.getElementById('current-language-name');
     if (nameEl) nameEl.textContent = `${lang.name} (${lang.version})`;
+    if (this.statusBar) {
+      this.statusBar.updateLanguage(lang);
+    }
   }
 
   async setLanguage(langSlug) {
@@ -177,9 +215,12 @@ class CodeForgeIDE {
     this.currentLanguage = lang;
     this.updateLanguageDropdown(lang);
     this.debugger.setLanguage(lang);
+    if (this.statusBar) {
+      this.statusBar.updateLanguage(lang);
+    }
 
     const activeFile = this.fileExplorer.getActiveFile();
-    if (activeFile && (activeFile.content === '' || activeFile.name.startsWith('main.') || activeFile.name.startsWith('index.'))) {
+    if (activeFile && (activeFile.content === '' || activeFile.name.startsWith('main.') || activeFile.name.startsWith('index.') || activeFile.name.startsWith('App.'))) {
       const newName = lang.default_filename;
       activeFile.name = newName;
       activeFile.content = lang.default_code;
@@ -190,7 +231,31 @@ class CodeForgeIDE {
       this.monaco.setLanguage(lang.monaco_id);
     }
 
+    if (this.livePreview) {
+      this.livePreview.updatePreview();
+    }
+
     Toast.info(`Language set to ${lang.name} ${lang.version}`);
+  }
+
+  toggleZenMode() {
+    document.body.classList.toggle('zen-focus-mode');
+    const isZen = document.body.classList.contains('zen-focus-mode');
+    if (this.monaco && this.monaco.editor) {
+      setTimeout(() => this.monaco.editor.layout(), 200);
+    }
+    Toast.info(isZen ? 'Zen Focus Mode ENABLED (Press Esc or click icon to exit)' : 'Zen Focus Mode DISABLED');
+  }
+
+  copyActiveFileCode() {
+    if (this.monaco) {
+      const code = this.monaco.getValue();
+      navigator.clipboard.writeText(code).then(() => {
+        Toast.success('Current document code copied!');
+      }).catch(() => {
+        Toast.error('Failed to copy code');
+      });
+    }
   }
 
   async runCode() {
@@ -244,6 +309,10 @@ class CodeForgeIDE {
         status_message: result.status_message || ''
       });
 
+      if (this.statusBar) {
+        this.statusBar.updateExecutionStats(response.execution_time_ms || 0, result.memory_bytes || 0);
+      }
+
       const isAwaitingInput = (result.stderr || '').includes('EOFError') || (result.status_message || '').includes('waiting for user input');
 
       if (response.status === 'completed' && !isAwaitingInput) {
@@ -276,6 +345,18 @@ class CodeForgeIDE {
         runBtn.innerHTML = '<i data-lucide="play" style="width:14px;height:14px;fill:currentColor;"></i> <span>Run</span>';
         if (window.lucide) window.lucide.createIcons();
       }
+    }
+  }
+
+  toggleZenMode() {
+    const isZen = document.body.classList.toggle('zen-focus-mode');
+    if (isZen) {
+      Toast.info('Zen Focus Mode (Press F11 to restore)');
+    } else {
+      Toast.info('Exited Zen Focus Mode');
+    }
+    if (this.monaco) {
+      setTimeout(() => this.monaco.layout(), 120);
     }
   }
 
@@ -549,12 +630,17 @@ class CodeForgeIDE {
     ShortcutManager.init();
     ShortcutManager.register('ctrl+s', () => this.saveProject(), 'Save project');
     ShortcutManager.register('ctrl+enter', () => this.runCode(), 'Run program');
+    ShortcutManager.register('f9', () => this.runCode(), 'Run program');
     ShortcutManager.register('f8', () => this.debugCode(), 'Debug program');
     ShortcutManager.register('ctrl+b', () => this.formatCode(), 'Format document');
     ShortcutManager.register('ctrl+p', () => this.commandPalette.toggle(), 'Command Palette');
     ShortcutManager.register('ctrl+k', () => this.commandPalette.toggle(), 'Command Palette');
     ShortcutManager.register('ctrl+m', () => this.openNewFileModal(), 'New file');
     ShortcutManager.register('ctrl+shift+s', () => this.openSettingsModal(), 'Settings');
+    ShortcutManager.register('ctrl+shift+a', () => this.aiAssistant ? this.aiAssistant.toggleDrawer() : null, 'Toggle AI Assistant');
+    ShortcutManager.register('ctrl+shift+l', () => this.snippets ? this.snippets.openModal() : null, 'Snippets Library');
+    ShortcutManager.register('ctrl+shift+t', () => this.projectTemplates ? this.projectTemplates.openModal() : null, 'Project Templates');
+    ShortcutManager.register('f11', () => this.toggleZenMode(), 'Toggle Zen Mode');
     ShortcutManager.register('escape', () => ModalsManager.closeAll(), 'Close modals');
   }
 

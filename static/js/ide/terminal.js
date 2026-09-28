@@ -216,9 +216,27 @@ class TerminalDock {
     });
   }
 
+  exportOutputLog() {
+    if (!this.outputContentEl) return;
+    const text = this.outputContentEl.innerText;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `codeforge_execution_${Date.now()}.log`;
+    a.click();
+    URL.revokeObjectURL(url);
+    Toast.success('Execution log downloaded');
+  }
+
   handleCliCommand(cmdText) {
     const cmd = (cmdText || '').trim();
     if (!cmd) return;
+
+    // Track command in history
+    if (!this.commandHistory) this.commandHistory = [];
+    this.commandHistory.push(cmd);
+    this.historyIndex = this.commandHistory.length;
 
     this.appendTerminalLog(`$ ${cmd}`);
 
@@ -230,7 +248,14 @@ class TerminalDock {
       const log = document.getElementById('dock-terminal-log');
       if (log) log.innerHTML = '<span style="color:var(--text-muted);">$ CodeForge terminal cleared.</span>';
     } else if (lower === 'help') {
-      this.appendTerminalLog('Available commands:\n  run         - Execute the active code\n  debug       - Launch debug console\n  save        - Save project workspace\n  format      - Format document code\n  ls          - List project files\n  clear / cls - Clear terminal output\n  help        - Show this help text');
+      this.appendTerminalLog('Available commands:\n  run         - Execute the active code\n  debug       - Launch debug console\n  ai          - Open AI Copilot assistant\n  preview     - Open Live Web / React Canvas\n  save        - Save project workspace\n  format      - Format document code\n  ls          - List project files\n  time        - Display current system time\n  clear / cls - Clear terminal output\n  help        - Show this help text');
+    } else if (lower === 'ai') {
+      if (window.ide && window.ide.aiAssistant) window.ide.aiAssistant.open();
+    } else if (lower === 'preview') {
+      this.switchTab('preview');
+      if (window.ide && window.ide.livePreview) window.ide.livePreview.updatePreview();
+    } else if (lower === 'time') {
+      this.appendTerminalLog(new Date().toString());
     } else if (lower === 'ls' || lower === 'dir') {
       if (window.ide && window.ide.fileExplorer) {
         const fileNames = window.ide.fileExplorer.files.map(f => f.name).join('   ');

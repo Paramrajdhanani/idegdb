@@ -30,17 +30,17 @@
     <!-- Center: Execution Controls & Language Selector -->
     <div class="nav-center">
       <!-- Language Dropdown -->
-      <div class="language-dropdown-wrapper">
-        <button class="language-select-btn" id="language-dropdown-btn" onclick="ide.toggleLanguageDropdown(event)">
-          <i data-lucide="code" style="width:14px;height:14px;color:var(--accent-primary);"></i>
+      <div class="language-dropdown-wrapper" id="language-dropdown-wrapper">
+        <button class="language-select-btn" id="language-dropdown-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Switch programming language">
+          <i data-lucide="code" style="width:14px;height:14px;color:var(--accent-primary);flex-shrink:0;"></i>
           <span id="current-language-name">Python (3.13)</span>
-          <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
+          <i data-lucide="chevron-down" style="width:12px;height:12px;flex-shrink:0;"></i>
         </button>
         <div class="language-menu" id="language-dropdown-menu">
           {% for lang in languages %}
-            <div class="language-option" onclick="ide.setLanguage('{{ lang.slug }}')">
+            <div class="language-option" data-lang="{{ lang.slug }}" onclick="ide.setLanguage('{{ lang.slug }}')">
               <div style="display:flex;align-items:center;gap:8px;">
-                <i data-lucide="{{ lang.icon_name|default:'code' }}" style="width:14px;height:14px;"></i>
+                <i data-lucide="{{ lang.icon_name|default:'code' }}" style="width:14px;height:14px;flex-shrink:0;"></i>
                 <span>{{ lang.name }}</span>
               </div>
               <span class="lang-version">{{ lang.version }}</span>

@@ -767,14 +767,35 @@ class CodeForgeIDE {
     // Language dropdown toggle
     const langBtn = document.getElementById('language-dropdown-btn');
     const langMenu = document.getElementById('language-dropdown-menu');
+    const langWrapper = document.getElementById('language-dropdown-wrapper') || (langBtn ? langBtn.parentElement : null);
+
     if (langBtn && langMenu) {
       langBtn.addEventListener('click', (e) => {
-        this.toggleLanguageDropdown(e);
+        e.preventDefault();
+        e.stopPropagation();
+        langMenu.classList.toggle('show');
+        const isShown = langMenu.classList.contains('show');
+        langBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
       });
 
-      window.addEventListener('click', (e) => {
-        if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) {
+      // Delegated click handler on language options inside the menu
+      langMenu.addEventListener('click', (e) => {
+        const option = e.target.closest('.language-option');
+        if (option) {
+          const langSlug = option.getAttribute('data-lang') || option.dataset.lang;
+          if (langSlug) {
+            this.setLanguage(langSlug);
+          }
           langMenu.classList.remove('show');
+          langBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Close dropdown when clicking anywhere outside
+      document.addEventListener('click', (e) => {
+        if (langWrapper && !langWrapper.contains(e.target)) {
+          langMenu.classList.remove('show');
+          langBtn.setAttribute('aria-expanded', 'false');
         }
       });
     }

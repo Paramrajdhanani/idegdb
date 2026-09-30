@@ -4,7 +4,8 @@
 
 class MonacoManager {
   constructor(containerId, options = {}) {
-    this.container = document.getElementById(containerId);
+    this.containerId = containerId;
+    this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
     this.editor = null;
     this.currentModel = null;
     this.options = {
@@ -23,28 +24,88 @@ class MonacoManager {
       smoothScrolling: true,
       renderWhitespace: 'selection',
       padding: { top: 12, bottom: 12 },
+      scrollBeyondLastLine: false,
+      readOnly: false,
+      domReadOnly: false,
       ...options
     };
     this.onContentChangeCallbacks = [];
   }
 
+  _ensureMonacoLoader() {
+    return new Promise((resolve, reject) => {
+      if (window.require && typeof window.require.config === 'function') {
+        return resolve();
+      }
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (window.require && typeof window.require.config === 'function') {
+          clearInterval(interval);
+          resolve();
+        } else if (attempts > 30) {
+          clearInterval(interval);
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.js';
+          script.onload = () => resolve();
+          script.onerror = (e) => reject(new Error('Failed to load Monaco loader.js from CDN'));
+          document.head.appendChild(script);
+        }
+      }, 50);
+    });
+  }
+
   async init(initialCode = '', language = 'python') {
-    return new Promise((resolve) => {
-      // Configure Monaco AMD loader path
+    this.container = this.container || document.getElementById(this.containerId);
+    if (!this.container) {
+      console.error(`Monaco container element #${this.containerId} not found in DOM.`);
+      return;
+    }
+
+    // Configure CORS-safe web worker environment for CDN loading
+    window.MonacoEnvironment = {
+      getWorkerUrl: function (workerId, label) {
+        return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+          self.MonacoEnvironment = {
+            baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/'
+          };
+          importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/base/worker/workerMain.js');`
+        )}`;
+      }
+    };
+
+    await this._ensureMonacoLoader();
+
+    return new Promise((resolve, reject) => {
       window.require.config({
         paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }
       });
 
       window.require(['vs/editor/editor.main'], () => {
-        this._defineThemes();
+        try {
+          this._defineThemes();
 
-        this.editor = monaco.editor.create(this.container, {
-          value: initialCode,
-          language: this._mapLanguage(language),
-          readOnly: false,
-          domReadOnly: false,
-          ...this.options
-        });
+          // Destroy any existing editor instance on same container
+          if (this.editor) {
+            this.editor.dispose();
+          }
+
+          this.editor = monaco.editor.create(this.container, {
+            value: initialCode || '',
+            language: this._mapLanguage(language),
+            readOnly: false,
+            domReadOnly: false,
+            automaticLayout: true,
+            ...this.options
+          });
+
+          // Layout & focus immediately
+          setTimeout(() => {
+            if (this.editor) {
+              this.editor.layout();
+              this.editor.focus();
+            }
+          }, 50);
 
         // Listen for content changes
         this.editor.onDidChangeModelContent((e) => {
@@ -132,7 +193,14 @@ class MonacoManager {
           }
         });
 
-        resolve(this.editor);
+          resolve(this.editor);
+        } catch (err) {
+          console.error('Monaco Editor initialization error:', err);
+          resolve(null);
+        }
+      }, (requireErr) => {
+        console.error('Require AMD load error for Monaco:', requireErr);
+        resolve(null);
       });
     });
   }

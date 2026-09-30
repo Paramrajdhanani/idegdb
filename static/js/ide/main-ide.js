@@ -39,61 +39,66 @@ class CodeForgeIDE {
       this.currentLanguage = this.languages.find(l => l.slug === 'python') || this.languages[0] || null;
     }
 
-    // 1. Initialize Monaco Editor
-    this.monaco = new MonacoManager('monaco-editor-container');
-    await this.monaco.init(this.currentLanguage ? this.currentLanguage.default_code : '', this.currentLanguage ? this.currentLanguage.monaco_id : 'python');
-
-    // 2. Initialize File Explorer
+    // 1. Initialize File Explorer
     this.fileExplorer = new FileExplorer('project-file-tree', 'editor-tabs-container', 'editor-breadcrumbs');
     this.fileExplorer.onFileSelectCallback = (file) => this.handleFileSelected(file);
     this.fileExplorer.onFileChangeCallback = (file) => this.handleFileContentChanged(file);
 
-    // 3. Initialize Terminal Dock
+    // 2. Initialize Terminal Dock
     this.terminal = new TerminalDock('ide-bottom-dock');
 
-    // 4. Initialize Debugger
+    // 3. Initialize Debugger
     this.debugger = new DebuggerController();
     this.debugger.setLanguage(this.currentLanguage);
 
-    // 5. Initialize Command Palette
+    // 4. Initialize Command Palette
     this.commandPalette = new CommandPalette();
 
-    // 6. Initialize AI Assistant Copilot
+    // 5. Initialize AI Assistant Copilot
     this.aiAssistant = new AIAssistantController();
     this.aiAssistant.init();
 
-    // 7. Initialize Live Preview Web / React Canvas
+    // 6. Initialize Live Preview Web / React Canvas
     this.livePreview = new LivePreviewController();
     this.livePreview.init();
 
-    // 8. Initialize Snippets Library
+    // 7. Initialize Snippets Library
     this.snippets = new SnippetsLibraryController();
 
-    // 9. Initialize Status Bar
+    // 8. Initialize Status Bar
     this.statusBar = new StatusBarController();
     this.statusBar.updateLanguage(this.currentLanguage);
     this.statusBar.updateContentMetrics(this.currentLanguage ? this.currentLanguage.default_code : '');
 
-    // 10. Initialize Project Templates Wizard
+    // 9. Initialize Project Templates Wizard
     this.projectTemplates = new ProjectTemplatesController();
 
-    // 11. Monaco Editor content listener
-    this.monaco.onContentChange((newVal) => {
-      this.fileExplorer.updateActiveFileContent(newVal);
-      this.triggerAutosave();
-    });
-
-    // 12. Initialize Keyboard Shortcuts & Listeners
+    // 10. Initialize Keyboard Shortcuts, Resizers & UI Listeners immediately
     this._initShortcuts();
     this._initResizers();
     this._initUIListeners();
 
-    // 13. Load Project Data or Setup Blank Guest Project
+    // 11. Load Project Data or Setup Blank Guest Project
     if (this.projectId) {
       await this.loadProject(this.projectId);
     } else {
       this.setupDefaultProject();
     }
+
+    // 12. Initialize Monaco Editor
+    this.monaco = new MonacoManager('monaco-editor-container');
+    const initialCode = (this.fileExplorer && this.fileExplorer.getActiveFile())
+      ? this.fileExplorer.getActiveFile().content
+      : (this.currentLanguage ? this.currentLanguage.default_code : '');
+    const initialMonacoLang = this.currentLanguage ? this.currentLanguage.monaco_id : 'python';
+
+    await this.monaco.init(initialCode, initialMonacoLang);
+
+    // 13. Monaco Editor content listener
+    this.monaco.onContentChange((newVal) => {
+      this.fileExplorer.updateActiveFileContent(newVal);
+      this.triggerAutosave();
+    });
   }
 
   setupDefaultProject() {
@@ -198,6 +203,17 @@ class CodeForgeIDE {
     if (titleInput) titleInput.value = name;
   }
 
+  toggleLanguageDropdown(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const menu = document.getElementById('language-dropdown-menu');
+    if (menu) {
+      menu.classList.toggle('show');
+    }
+  }
+
   updateLanguageDropdown(lang) {
     if (!lang) return;
     this.currentLanguage = lang;
@@ -209,30 +225,52 @@ class CodeForgeIDE {
   }
 
   async setLanguage(langSlug) {
-    const lang = this.languages.find(l => l.slug === langSlug);
-    if (!lang) return;
+    // Dismiss language dropdown menu
+    const menu = document.getElementById('language-dropdown-menu');
+    if (menu) {
+      menu.classList.remove('show');
+    }
+
+    if (!langSlug) return;
+    const lang = this.languages.find(l => l.slug.toLowerCase() === langSlug.toLowerCase()) ||
+                 this.languages.find(l => l.monaco_id === langSlug.toLowerCase()) ||
+                 this.languages.find(l => l.name.toLowerCase() === langSlug.toLowerCase());
+    if (!lang) {
+      console.warn('Language not found for identifier:', langSlug);
+      return;
+    }
 
     this.currentLanguage = lang;
     this.updateLanguageDropdown(lang);
-    this.debugger.setLanguage(lang);
+    if (this.debugger) {
+      this.debugger.setLanguage(lang);
+    }
     if (this.statusBar) {
       this.statusBar.updateLanguage(lang);
     }
 
-    const activeFile = this.fileExplorer.getActiveFile();
+    const activeFile = this.fileExplorer ? this.fileExplorer.getActiveFile() : null;
     if (activeFile && (activeFile.content === '' || activeFile.name.startsWith('main.') || activeFile.name.startsWith('index.') || activeFile.name.startsWith('App.'))) {
       const newName = lang.default_filename;
       activeFile.name = newName;
       activeFile.content = lang.default_code;
-      this.fileExplorer.renderTree();
-      this.fileExplorer.renderTabs();
-      this.monaco.setValue(lang.default_code, lang.monaco_id);
-    } else {
+      if (this.fileExplorer) {
+        this.fileExplorer.renderTree();
+        this.fileExplorer.renderTabs();
+      }
+      if (this.monaco) {
+        this.monaco.setValue(lang.default_code, lang.monaco_id);
+      }
+    } else if (this.monaco) {
       this.monaco.setLanguage(lang.monaco_id);
     }
 
     if (this.livePreview) {
       this.livePreview.updatePreview();
+    }
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
     }
 
     Toast.info(`Language set to ${lang.name} ${lang.version}`);
@@ -731,11 +769,14 @@ class CodeForgeIDE {
     const langMenu = document.getElementById('language-dropdown-menu');
     if (langBtn && langMenu) {
       langBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        langMenu.classList.toggle('show');
+        this.toggleLanguageDropdown(e);
       });
 
-      window.addEventListener('click', () => langMenu.classList.remove('show'));
+      window.addEventListener('click', (e) => {
+        if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) {
+          langMenu.classList.remove('show');
+        }
+      });
     }
 
     // Project title input auto-width & save trigger

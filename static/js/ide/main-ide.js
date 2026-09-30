@@ -39,66 +39,75 @@ class CodeForgeIDE {
       this.currentLanguage = this.languages.find(l => l.slug === 'python') || this.languages[0] || null;
     }
 
-    // 1. Initialize File Explorer
+    // 1. Initialize Monaco Manager instance first
+    this.monaco = new MonacoManager('monaco-editor-container');
+
+    // 2. Initialize File Explorer
     this.fileExplorer = new FileExplorer('project-file-tree', 'editor-tabs-container', 'editor-breadcrumbs');
     this.fileExplorer.onFileSelectCallback = (file) => this.handleFileSelected(file);
     this.fileExplorer.onFileChangeCallback = (file) => this.handleFileContentChanged(file);
 
-    // 2. Initialize Terminal Dock
+    // 3. Initialize Terminal Dock
     this.terminal = new TerminalDock('ide-bottom-dock');
 
-    // 3. Initialize Debugger
+    // 4. Initialize Debugger
     this.debugger = new DebuggerController();
     this.debugger.setLanguage(this.currentLanguage);
 
-    // 4. Initialize Command Palette
+    // 5. Initialize Command Palette
     this.commandPalette = new CommandPalette();
 
-    // 5. Initialize AI Assistant Copilot
+    // 6. Initialize AI Assistant Copilot
     this.aiAssistant = new AIAssistantController();
     this.aiAssistant.init();
 
-    // 6. Initialize Live Preview Web / React Canvas
+    // 7. Initialize Live Preview Web / React Canvas
     this.livePreview = new LivePreviewController();
     this.livePreview.init();
 
-    // 7. Initialize Snippets Library
+    // 8. Initialize Snippets Library
     this.snippets = new SnippetsLibraryController();
 
-    // 8. Initialize Status Bar
+    // 9. Initialize Status Bar
     this.statusBar = new StatusBarController();
     this.statusBar.updateLanguage(this.currentLanguage);
     this.statusBar.updateContentMetrics(this.currentLanguage ? this.currentLanguage.default_code : '');
 
-    // 9. Initialize Project Templates Wizard
+    // 10. Initialize Project Templates Wizard
     this.projectTemplates = new ProjectTemplatesController();
 
-    // 10. Initialize Keyboard Shortcuts, Resizers & UI Listeners immediately
+    // 11. Initialize Keyboard Shortcuts, Resizers & UI Listeners immediately
     this._initShortcuts();
     this._initResizers();
     this._initUIListeners();
 
-    // 11. Load Project Data or Setup Blank Guest Project
+    // 12. Load Project Data or Setup Blank Guest Project
     if (this.projectId) {
       await this.loadProject(this.projectId);
     } else {
       this.setupDefaultProject();
     }
 
-    // 12. Initialize Monaco Editor
-    this.monaco = new MonacoManager('monaco-editor-container');
-    const initialCode = (this.fileExplorer && this.fileExplorer.getActiveFile())
-      ? this.fileExplorer.getActiveFile().content
-      : (this.currentLanguage ? this.currentLanguage.default_code : '');
+    // 13. Initialize Monaco Editor
+    const activeFile = this.fileExplorer ? this.fileExplorer.getActiveFile() : null;
+    const initialCode = activeFile ? activeFile.content : (this.currentLanguage ? this.currentLanguage.default_code : '');
     const initialMonacoLang = this.currentLanguage ? this.currentLanguage.monaco_id : 'python';
 
     await this.monaco.init(initialCode, initialMonacoLang);
 
-    // 13. Monaco Editor content listener
+    // 14. Monaco Editor content listener
     this.monaco.onContentChange((newVal) => {
       this.fileExplorer.updateActiveFileContent(newVal);
       this.triggerAutosave();
     });
+
+    // 15. Ensure Monaco Editor is focused and laid out for typing
+    setTimeout(() => {
+      if (this.monaco) {
+        this.monaco.layout();
+        this.monaco.focus();
+      }
+    }, 150);
   }
 
   setupDefaultProject() {
@@ -146,15 +155,19 @@ class CodeForgeIDE {
 
   handleFileSelected(file) {
     if (!file) {
-      this.monaco.setValue('// No file open', 'plaintext');
+      if (this.monaco && this.monaco.editor) {
+        this.monaco.setValue('// No file open', 'plaintext');
+      }
       return;
     }
-    const ext = file.name.split('.').pop();
-    const langObj = this.languages.find(l => l.file_extension.replace('.', '') === ext);
-    const monacoLang = langObj ? langObj.monaco_id : ext;
+    const ext = file.name ? file.name.split('.').pop() : '';
+    const langObj = this.languages ? this.languages.find(l => l.file_extension.replace('.', '') === ext) : null;
+    const monacoLang = langObj ? langObj.monaco_id : (ext || 'plaintext');
 
-    this.monaco.setValue(file.content || '', monacoLang);
-    this.monaco.focus();
+    if (this.monaco && this.monaco.editor) {
+      this.monaco.setValue(file.content || '', monacoLang);
+      this.monaco.focus();
+    }
 
     if (this.statusBar) {
       this.statusBar.updateContentMetrics(file.content || '');

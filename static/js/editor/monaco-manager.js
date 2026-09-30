@@ -41,6 +41,8 @@ class MonacoManager {
         this.editor = monaco.editor.create(this.container, {
           value: initialCode,
           language: this._mapLanguage(language),
+          readOnly: false,
+          domReadOnly: false,
           ...this.options
         });
 
@@ -312,6 +314,10 @@ class MonacoManager {
 
   focus() {
     if (this.editor) this.editor.focus();
+  }
+
+  layout() {
+    if (this.editor) this.editor.layout();
   }
 }
 

@@ -30,22 +30,7 @@ class ExecutionCreateAPIView(views.APIView):
         command_args = validated.get('command_args', '')
         compiler_flags = validated.get('compiler_flags', '')
 
-        # Create execution database record
-        user = request.user if request.user.is_authenticated else None
-        client_ip = request.META.get('REMOTE_ADDR')
-
-        execution = Execution.objects.create(
-            user=user,
-            project=project,
-            language=language,
-            status='running',
-            stdin=stdin_data,
-            command_args=command_args,
-            compiler_flags=compiler_flags,
-            client_ip=client_ip,
-            started_at=timezone.now()
-        )
-
+        started_at = timezone.now()
         runner = get_runner()
         run_output = runner.execute(
             language_slug=language.slug,
@@ -56,13 +41,28 @@ class ExecutionCreateAPIView(views.APIView):
             compiler_flags=compiler_flags,
             timeout_seconds=getattr(settings, 'EXECUTION_TIMEOUT_SECONDS', 7)
         )
+        finished_at = timezone.now()
 
-        execution.status = run_output.get('status', 'completed')
-        execution.finished_at = timezone.now()
-        execution.execution_time_ms = run_output.get('execution_time_ms', 0)
-        execution.save()
+        status_val = run_output.get('status', 'completed')
+        exec_ms = run_output.get('execution_time_ms', 0)
+        user = request.user if request.user.is_authenticated else None
+        client_ip = request.META.get('REMOTE_ADDR')
 
-        # Create ExecutionResult record
+        # Fast direct database write
+        execution = Execution.objects.create(
+            user=user,
+            project=project,
+            language=language,
+            status=status_val,
+            stdin=stdin_data,
+            command_args=command_args,
+            compiler_flags=compiler_flags,
+            client_ip=client_ip,
+            started_at=started_at,
+            finished_at=finished_at,
+            execution_time_ms=exec_ms
+        )
+
         result = ExecutionResult.objects.create(
             execution=execution,
             stdout=run_output.get('stdout', ''),
@@ -72,7 +72,34 @@ class ExecutionCreateAPIView(views.APIView):
             status_message=run_output.get('status_message', 'Execution completed.')
         )
 
-        return Response(ExecutionDetailSerializer(execution).data, status=status.HTTP_201_CREATED)
+        return Response({
+            'id': execution.id,
+            'status': status_val,
+            'language': {
+                'id': language.id,
+                'name': language.name,
+                'slug': language.slug,
+                'version': language.version,
+                'file_extension': language.file_extension,
+                'icon_name': language.icon_name,
+                'monaco_id': language.monaco_id,
+            },
+            'started_at': started_at.isoformat(),
+            'finished_at': finished_at.isoformat(),
+            'execution_time_ms': exec_ms,
+            'stdin': stdin_data,
+            'command_args': command_args,
+            'compiler_flags': compiler_flags,
+            'result': {
+                'id': result.id,
+                'stdout': result.stdout,
+                'stderr': result.stderr,
+                'exit_code': result.exit_code,
+                'memory_bytes': result.memory_bytes,
+                'status_message': result.status_message,
+                'created_at': result.created_at.isoformat(),
+            }
+        }, status=status.HTTP_201_CREATED)
 
 
 class ExecutionDetailAPIView(generics.RetrieveAPIView):

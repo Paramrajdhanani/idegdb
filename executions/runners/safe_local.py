@@ -170,11 +170,18 @@ class SafeLocalExecutionRunner(BaseExecutionRunner):
         process_env['PYTHONUNBUFFERED'] = '1'
         process_env['PYTHONIOENCODING'] = 'utf-8'
         process_env['PYTHONUTF8'] = '1'
+        process_env['PYTHONDONTWRITEBYTECODE'] = '1'
         process_env['NODE_OPTIONS'] = '--max-old-space-size=256'
         process_env['LC_ALL'] = 'en_US.UTF-8'
         process_env['LANG'] = 'en_US.UTF-8'
         if env:
             process_env.update(env)
+
+        # On Windows, suppress console window creation overhead
+        startupinfo = None
+        if sys.platform == 'win32':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         try:
             process = subprocess.Popen(
@@ -184,6 +191,7 @@ class SafeLocalExecutionRunner(BaseExecutionRunner):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=process_env,
+                startupinfo=startupinfo,
                 text=True,
                 encoding='utf-8',
                 errors='replace'
@@ -248,14 +256,14 @@ class SafeLocalExecutionRunner(BaseExecutionRunner):
         return node_exec
 
     def _run_python(self, cwd: str, entry_file: str, stdin_data: str, command_args: str, timeout: int) -> Dict[str, Any]:
-        cmd = [sys.executable, '-X', 'utf8', entry_file]
+        cmd = [sys.executable, '-X', 'utf8', '-B', '-u', entry_file]
         if command_args:
             cmd.extend(shlex.split(command_args))
         return self._execute_subprocess(cmd, cwd, stdin_data, timeout)
 
     def _run_node(self, cwd: str, entry_file: str, stdin_data: str, command_args: str, timeout: int) -> Dict[str, Any]:
         node_exec = self._get_node_executable()
-        cmd = [node_exec, entry_file]
+        cmd = [node_exec, '--no-warnings', entry_file]
         if command_args:
             cmd.extend(shlex.split(command_args))
         return self._execute_subprocess(cmd, cwd, stdin_data, timeout)

@@ -167,9 +167,19 @@
 <script src="/static/js/ide/modals.js"></script>
 <script src="/static/js/dashboard/dashboard.js"></script>
 <script>
-  window.dashboard = new DashboardController();
-  document.addEventListener('DOMContentLoaded', () => {
-    window.dashboard.init();
-  });
+  (function() {
+    function startDashboard() {
+      if (!window.dashboard) {
+        window.dashboard = new DashboardController();
+      }
+      window.dashboard.init();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startDashboard);
+    } else {
+      startDashboard();
+    }
+  })();
 </script>
 {% endblock %}

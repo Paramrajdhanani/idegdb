@@ -122,14 +122,26 @@
 
 {{ languages_data|json_script:"languages-data" }}
 <script>
-  const languagesData = JSON.parse(document.getElementById('languages-data')?.textContent || '[]');
+  (function() {
+    function startShareIDE() {
+      const scriptEl = document.getElementById('languages-data');
+      const languagesData = scriptEl ? JSON.parse(scriptEl.textContent || '[]') : [];
 
-  window.ide = new CodeForgeIDE();
-  document.addEventListener('DOMContentLoaded', () => {
-    window.ide.init({
-      projectId: "{{ project.id }}",
-      languages: languagesData
-    });
-  });
+      if (!window.ide) {
+        window.ide = new CodeForgeIDE();
+      }
+
+      window.ide.init({
+        projectId: "{{ project.id }}",
+        languages: languagesData
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startShareIDE);
+    } else {
+      startShareIDE();
+    }
+  })();
 </script>
 {% endblock %}

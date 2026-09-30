@@ -209,8 +209,12 @@ class CodeForgeIDE {
       event.stopPropagation();
     }
     const menu = document.getElementById('language-dropdown-menu');
+    const btn = document.getElementById('language-dropdown-btn');
     if (menu) {
-      menu.classList.toggle('show');
+      const isShow = menu.classList.toggle('show');
+      if (btn) {
+        btn.setAttribute('aria-expanded', isShow ? 'true' : 'false');
+      }
     }
   }
 
@@ -227,11 +231,27 @@ class CodeForgeIDE {
   async setLanguage(langSlug) {
     // Dismiss language dropdown menu
     const menu = document.getElementById('language-dropdown-menu');
+    const btn = document.getElementById('language-dropdown-btn');
     if (menu) {
       menu.classList.remove('show');
     }
+    if (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+    }
 
     if (!langSlug) return;
+
+    if (!this.languages || this.languages.length === 0) {
+      try {
+        const scriptEl = document.getElementById('languages-data');
+        if (scriptEl) {
+          this.languages = JSON.parse(scriptEl.textContent || '[]');
+        }
+      } catch (e) {
+        console.error('Failed to parse languages-data fallback:', e);
+      }
+    }
+
     const lang = this.languages.find(l => l.slug.toLowerCase() === langSlug.toLowerCase()) ||
                  this.languages.find(l => l.monaco_id === langSlug.toLowerCase()) ||
                  this.languages.find(l => l.name.toLowerCase() === langSlug.toLowerCase());
@@ -770,32 +790,32 @@ class CodeForgeIDE {
     const langWrapper = document.getElementById('language-dropdown-wrapper') || (langBtn ? langBtn.parentElement : null);
 
     if (langBtn && langMenu) {
-      langBtn.addEventListener('click', (e) => {
+      langBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        langMenu.classList.toggle('show');
-        const isShown = langMenu.classList.contains('show');
-        langBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
-      });
+        this.toggleLanguageDropdown(e);
+      };
 
       // Delegated click handler on language options inside the menu
-      langMenu.addEventListener('click', (e) => {
+      langMenu.onclick = (e) => {
         const option = e.target.closest('.language-option');
         if (option) {
+          e.preventDefault();
+          e.stopPropagation();
           const langSlug = option.getAttribute('data-lang') || option.dataset.lang;
           if (langSlug) {
             this.setLanguage(langSlug);
           }
           langMenu.classList.remove('show');
-          langBtn.setAttribute('aria-expanded', 'false');
+          if (langBtn) langBtn.setAttribute('aria-expanded', 'false');
         }
-      });
+      };
 
       // Close dropdown when clicking anywhere outside
       document.addEventListener('click', (e) => {
         if (langWrapper && !langWrapper.contains(e.target)) {
           langMenu.classList.remove('show');
-          langBtn.setAttribute('aria-expanded', 'false');
+          if (langBtn) langBtn.setAttribute('aria-expanded', 'false');
         }
       });
     }
@@ -821,5 +841,18 @@ window.CodeForgeIDE = CodeForgeIDE;
 window.toggleAICopilot = function() {
   if (window.ide && window.ide.aiAssistant) {
     window.ide.aiAssistant.toggleDrawer();
+  }
+};
+window.toggleLanguageDropdown = function(e) {
+  if (window.ide) {
+    window.ide.toggleLanguageDropdown(e);
+  } else {
+    const menu = document.getElementById('language-dropdown-menu');
+    if (menu) menu.classList.toggle('show');
+  }
+};
+window.setLanguage = function(slug) {
+  if (window.ide) {
+    window.ide.setLanguage(slug);
   }
 };

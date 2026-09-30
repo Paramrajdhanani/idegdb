@@ -39,9 +39,14 @@
   <script src="/static/js/core/shortcuts.js"></script>
   <script src="/static/js/editor/monaco-manager.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function initGlobalLucide() {
       if (window.lucide) window.lucide.createIcons();
-    });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGlobalLucide);
+    } else {
+      initGlobalLucide();
+    }
   </script>
   {% block extra_js %}{% endblock %}
 </body>
